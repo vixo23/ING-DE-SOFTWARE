@@ -49,34 +49,31 @@ $id_empresa=$_SESSION['idempresa'];
         <thead class="thead-dark">
             <tr>
                 <th>#</th>
-                <th>Fecha</th>
-                <th>Motivo</th>
-                <th>Horas</th>
-                <th>Hora de inicio</th>
-                <th>Hora de fin</th>
-                <th>Fecha de inicio</th>
-                <th>Fecha de fin</th>
-                <th>Goce de sueldo</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            $query = mysqli_query($conexion, "SELECT * FROM permisos WHERE id_empresa='$id_empresa' ORDER BY observaciones");
+            $query = mysqli_query($conexion, "SELECT * FROM tipo_vacaciones WHERE id_empresas='$id_empresa' ORDER BY descripcion");
             $result = mysqli_num_rows($query);
             if ($result > 0) {
                 while ($data = mysqli_fetch_assoc($query)) {
-                    $estado = ($data['goce'] == 1) ? '<span class="badge badge-success">Con goce</span>' : '<span class="badge badge-danger">Sin goce</span>';
+                    $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
                     ?>
                     <tr>
-                        <td><?php echo $data['id_permisos']; ?></td>
-                        <td><?php echo $data['creado']; ?></td>
-                        <td><?php echo $data['observaciones']; ?></td>
-                        <td><?php echo $data['total_horas']; ?></td>
-                        <td><?php echo $data['hora_ini']; ?></td>
-                        <td><?php echo $data['hora_fin']; ?></td>
-                        <td><?php echo $data['fecha_ini']; ?></td>
-                        <td><?php echo $data['fecha_fin']; ?></td>
+                        <td><?php echo $data['id_tipovacacion']; ?></td>
+                        <td><?php echo $data['descripcion']; ?></td>
                         <td><?php echo $estado; ?></td>
+                        <td>
+                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_tipovacacion']; ?>, '<?php echo $data['descripcion']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
+                                <i class='fas fa-edit'></i>
+                            </a>
+                            <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipovacacion']; ?>)" class="btn btn-warning">
+                                <i class='fas fa-exchange-alt'></i> Cambiar Estado
+                            </a>
+                        </td>
                     </tr>
             <?php }
             } ?>

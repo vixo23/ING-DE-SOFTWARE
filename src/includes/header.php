@@ -23,6 +23,13 @@ $id_empresa=$_SESSION['idempresa'];
     <!-- Theme style -->
     <link rel="stylesheet" href="../assets/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="../assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <!-- jQuery completo (no slim) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Popper.js para tooltips/modals -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <!-- Bootstrap 4 JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 	<script language="JavaScript">
 		function mueveReloj(){
 			momentoActual = new Date()
@@ -138,15 +145,15 @@ $id_empresa=$_SESSION['idempresa'];
                                     </a>
                                 </li>
 								<li class="nav-item">
-                                    <a href="ciudad.php" class="nav-link">
+                                    <a href="ficha_empleados.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
-                                        <p>Ciudad</p>
+                                        <p>Ficha de Empleados</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="comuna.php" class="nav-link">
+                                    <a href="tipo_vacaciones.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
-                                        <p>Comunas</p>
+                                        <p>Tipo de Vacaciones</p>
                                     </a>
                                 </li>
 								<li class="nav-item">
@@ -182,7 +189,7 @@ $id_empresa=$_SESSION['idempresa'];
                             </ul>
                         </li>
 						<li class="nav-item">
-                            <a href="ficha_empleado.php" class="nav-link">
+                            <a href="ingreso_empleado.php" class="nav-link">
                                 <i class="nav-icon fas fa-user"></i><p>Ingreso de Empleado</p>
                             </a>
                         </li>
@@ -238,13 +245,18 @@ $id_empresa=$_SESSION['idempresa'];
 							</ul>
                         </li>
                         <li class="nav-item">
-                            <a href="salir.php" class="nav-link">
+                            <a href="salir.php" class="nav-link" data-toggle="modal" data-target="#modalCerrarSesion">
                                 <i class="nav-icon fas fa-power-off"></i>
                                 <p>
                                     Salir
                                 </p>
                             </a>
                         </li>
+                        <script>
+                        function confirmarCerrarSesion() {
+                            return confirm("¿Estás seguro que deseas cerrar sesión?");
+                        }
+                        </script>
 
                     </ul>
                 </nav>
@@ -259,3 +271,24 @@ $id_empresa=$_SESSION['idempresa'];
             <!-- Main content -->
             <div class="content">
                 <div class="container-fluid py-2">
+                    <div class="modal fade" id="modalCerrarSesion" tabindex="-1" role="dialog" aria-labelledby="modalCerrarSesionLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title" id="modalCerrarSesionLabel">Confirmar salida</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro que deseas cerrar sesión?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <a href="salir.php" class="btn btn-danger">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
