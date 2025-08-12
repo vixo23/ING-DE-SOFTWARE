@@ -35,6 +35,7 @@ if (!empty($_SESSION['active'])) {
                     header('Location: src/dashboard.php');
                     exit; // Termina el script después de la redirección
                 }
+                
             } else {
                 $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
                         Clave incorrecta '.$sql.'
