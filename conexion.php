@@ -2,7 +2,7 @@
     $host = "localhost";
     $user = "root";
     $clave = "1234";
-    $bd = "biometrico";
+    $bd = "biometrico1";
     $conexion = mysqli_connect($host,$user,$clave,$bd);
     if (mysqli_connect_errno()){
         echo "No se pudo conectar a la base de datos";
@@ -14,7 +14,7 @@
 	$hostw = "190.151.107.22";
     $userw = "eugbiometrico";
     $clavew = "admin2510";
-    $bdw = "biometrico";
+    $bdw = "biometrico1";
     $conexionw = mysqli_connect($hostw,$userw,$clavew,$bdw);
     if (mysqli_connect_errno()){
         echo "No se pudo conectar a la base de datos";
