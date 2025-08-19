@@ -236,13 +236,6 @@ $id_empresa=$_SESSION['idempresa'];
 									</a>
 								</li>                               
 							</ul>
-							<ul class="nav nav-treeview">
-								<li class="nav-item">
-									<a href="ventas_producto.php" class="nav-link">
-										<i class="nav-icon fas fa-chart-line"></i><p>Listado de Ventas por Producto</p>
-									</a>
-								</li>                               
-							</ul>
                         </li>
                         <li class="nav-item">
                             <a href="salir.php" class="nav-link" data-toggle="modal" data-target="#modalCerrarSesion">

@@ -14,7 +14,7 @@ $id_empresa=$_SESSION['idempresa'];
 </head>
 <div class="card">
     <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
+        <form action="" method="post" autocomplete="off" id="formulario">       
             <!-- Fila de Formulario -->
             <div class="row">
                 <!-- Nombre -->

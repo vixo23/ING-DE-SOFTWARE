@@ -2,20 +2,18 @@
 session_start();
 include "../conexion.php";
 include "includes/header.php";
-$id_empresa=$_SESSION['idempresa'];
+$id_empresa = $_SESSION['idempresa'];
 ?>
 <head>
-
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 </head>
+
 <div class="card">
     <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
-            <!-- Fila de Formulario -->
+        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">
             <div class="row">
                 <!-- Nombre -->
                 <div class="col-md-3">
@@ -25,7 +23,8 @@ $id_empresa=$_SESSION['idempresa'];
                         <input type="hidden" id="id" name="id">
                     </div>
                 </div>
-                <!-- Estado  -->
+
+                <!-- Estado -->
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="estado">Estado</label>
@@ -35,21 +34,40 @@ $id_empresa=$_SESSION['idempresa'];
                         </select>
                     </div>
                 </div>
+
+                <!-- Descripción del Turno -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="descripcion_turno">Descripción del Turno</label>
+                        <textarea class="form-control" id="descripcion_turno" name="descripcion_turno" placeholder="Agregue una descripción para este turno..." rows="3"></textarea>
+                    </div>
+                </div>
             </div>
+
             <!-- Botones -->
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
             <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
         </form>
+
+        <!-- Vista previa de descripción -->
+        <div class="mt-3">
+            <h5>Descripción del Turno (no se guarda):</h5>
+            <div id="mostrarDescripcion" class="alert alert-info" style="display: none;"></div>
+            <div id="mensajeRestaurado" class="alert alert-success mt-2" style="display: none;">
+                Descripción restaurada desde sesión anterior.
+            </div>
+        </div>
     </div>
 </div>
 
-
+<!-- Tabla -->
 <div class="table-responsive">
     <table class="table table-hover table-striped table-bordered mt-2" id="tbl">
         <thead class="thead-dark">
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
+                <th>Descripción</th> <!-- Nueva columna -->
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -64,10 +82,11 @@ $id_empresa=$_SESSION['idempresa'];
                     ?>
                     <tr>
                         <td><?php echo $data['id_tipocontrato']; ?></td>
-                        <td><?php echo $data['descripcion']; ?></td>
+                        <td><?php echo htmlspecialchars($data['descripcion']); ?></td>
+                        <td><?php echo htmlspecialchars($data['descripcion_turno']); ?></td> <!-- Mostrar descripción -->
                         <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_tipocontrato']; ?>, '<?php echo $data['descripcion']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
+                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_tipocontrato']; ?>, '<?php echo addslashes($data['descripcion']); ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
                             </a>
                             <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipocontrato']; ?>)" class="btn btn-warning">
@@ -81,7 +100,7 @@ $id_empresa=$_SESSION['idempresa'];
     </table>
 </div>
 
-<!-- Modal de Confirmación -->
+<!-- Modales -->
 <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -102,7 +121,6 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-<!-- Modal para editar tipo contrato -->
 <div class="modal fade" id="editarModal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -126,8 +144,6 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-
-<!-- Modal de Alerta -->
 <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -147,47 +163,67 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-<!-- jQuery y Bootstrap JS -->
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
-// Variable para guardar el ID del tipo de contrato
 let tipocontratoId;
 
-// Función para abrir el modal de confirmación
 function abrirModalConfirmacion(id) {
-    tipocontratoId = id; // Guardar el ID del garzón
-    $('#confirmModal').modal('show'); // Mostrar el modal
+    tipocontratoId = id;
+    $('#confirmModal').modal('show');
 }
 
-// Función para confirmar el cambio de estado
 $('#confirmBtn').on('click', function() {
     if (tipocontratoId) {
-        // Redirigir a cambiar_estado.php con el ID del garzón
         window.location.href = `cambiar_estado.php?id=${tipocontratoId}`;
     }
 });
 
-// Función para abrir el modal de edición
 function editartipocontrato(id, nombre, estado) {
-    // Rellenar el formulario de edición
     $('#idEditar').val(id);
     $('#nombreEditar').val(nombre);
-    $('#editarModal').modal('show'); // Mostrar el modal de edición
+    $('#editarModal').modal('show');
 }
 
-// Función para limpiar el formulario
 function limpiar() {
-    $('#formulario')[0].reset(); // Restablecer el formulario
+    $('#formulario')[0].reset();
+    $('#descripcion_turno').val('');
+    $('#mostrarDescripcion').hide();
+    sessionStorage.removeItem('descripcion_turno');
+    $('#mensajeRestaurado').hide();
 }
 
-// Función para mostrar alerta
+// Mostrar alerta
 function mostrarAlerta(mensaje) {
-    $('#alertMessage').text(mensaje); // Rellenar el mensaje de alerta
-    $('#alertModal').modal('show'); // Mostrar el modal de alerta
+    $('#alertMessage').text(mensaje);
+    $('#alertModal').modal('show');
 }
+
+// Guardar y mostrar descripción del turno
+$('#formulario').on('submit', function () {
+    const descripcion = $('#descripcion_turno').val().trim();
+    if (descripcion !== '') {
+        sessionStorage.setItem('descripcion_turno', descripcion);
+        $('#mostrarDescripcion').text(descripcion).show();
+    } else {
+        sessionStorage.removeItem('descripcion_turno');
+        $('#mostrarDescripcion').hide();
+    }
+});
+
+// Restaurar descripción desde sessionStorage
+$(document).ready(function () {
+    const descripcionGuardada = sessionStorage.getItem('descripcion_turno');
+    if (descripcionGuardada) {
+        $('#descripcion_turno').val(descripcionGuardada);
+        $('#mostrarDescripcion').text(descripcionGuardada).show();
+        $('#mensajeRestaurado').fadeIn();
+        setTimeout(() => { $('#mensajeRestaurado').fadeOut(); }, 4000);
+    }
+});
 </script>
 
 <?php include_once "includes/footer.php"; ?>
