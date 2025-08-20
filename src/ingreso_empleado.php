@@ -50,19 +50,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Registro de Empleado</title>
     <style>
         body { font-family: Arial; }
-        .form-container { max-width: 900px; margin: auto; padding: 20px; }
-        form { display: flex; flex-wrap: wrap; gap: 20px; }
-        .form-group { flex: 1 1 45%; display: flex; flex-direction: column; }
+        .form-container { max-width: auto; margin: auto; padding: 20px; }
+        form { display: flex; flex-wrap: wrap; gap: 40px; }
+        .form-group { flex: 1 1 1 45%; display: flex; flex-direction: column; }
         .full-width { flex: 1 1 100%; }
-        input, select { padding: 6px; font-size: 14px; }
-        input[type="submit"] { margin-top: 20px; padding: 10px; background-color: #4CAF50; color: white; border: none; font-size: 16px; cursor: pointer; }
+        input, select { padding: 5px; font-size: 20px; }
+        input[type="submit"] { width:200px ; margin: 20px auto; display:block; padding: 10px; background-color: #4CAF50; color: white; border: none; font-size: 16px; cursor: pointer; }
         input[type="submit"]:hover { background-color: #45a049; }
         p.mensaje { color: green; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="form-container mt-20">
+<div class="form-container mt-20 ">
     <h2>Formulario de Registro de Empleado</h2>
 
     <?php if (isset($mensaje)) echo "<p class='mensaje'>$mensaje</p>"; ?>
@@ -120,20 +120,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="form-group">
-            <label for="tipo_contrato">Tipo de Contrato:</label>
-            <select id="tipo_contrato" name="tipo_contrato" required>
-                <option value="">Seleccione...</option>
-                <option value="Plazo Fijo">Contrato Plazo Fijo</option>
-                <option value="Indefinido">Contrato Indefinido</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="fecha_ingreso">Fecha de Ingreso:</label>
-            <input type="date" id="fecha_ingreso" name="fecha_ingreso" required>
-        </div>
-
-        <div class="form-group">
             <label for="empresa">Empresa:</label>
             <input type="text" id="empresa" name="empresa" required>
         </div>
@@ -158,9 +144,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="text" id="cargo" name="cargo" required>
         </div>
 
+        <div class="form-group">
+            <label for="tipo_contrato">Tipo de Contrato:</label>
+            <select id="tipo_contrato" name="tipo_contrato" required>
+                <option value="">Seleccione...</option>
+                <option value="Plazo Fijo">Contrato Plazo Fijo</option>
+                <option value="Indefinido">Contrato Indefinido</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="fecha_ingreso">Fecha de Ingreso:</label>
+            <input type="date" id="fecha_ingreso" name="fecha_ingreso" required>
+        </div>
+
         <div class="form-group full-width">
             <input type="submit" value="Agregar Empleado">
         </div>
+
     </form>
 </div>
 
