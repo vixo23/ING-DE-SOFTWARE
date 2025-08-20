@@ -3,7 +3,34 @@ session_start();
 include "../conexion.php";
 include "includes/header.php";
 $id_empresa=$_SESSION['idempresa'];
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['estado'])) {
+    $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $estado = (int)$_POST['estado'];
+
+    // Validar que no esté vacío
+    if (!empty($descripcion)) {
+        $query_insert = mysqli_query($conexion, "INSERT INTO departamentos (descripcion, status, id_empresas) VALUES ('$descripcion', $estado, $id_empresa)");
+
+        if ($query_insert) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Departamento registrado correctamente.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        } else {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Error al registrar el departamento.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        }
+    }
+}
+
 ?>
+
 <head>
 
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -14,7 +41,7 @@ $id_empresa=$_SESSION['idempresa'];
 </head>
 <div class="card">
     <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
+        <form action="" method="post" autocomplete="off" id="formulario">       
             <!-- Fila de Formulario -->
             <div class="row">
                 <!-- Nombre -->
