@@ -144,19 +144,7 @@ $id_empresa=$_SESSION['idempresa'];
                                         <p>Centro de Costo</p>
                                     </a>
                                 </li>
-								<li class="nav-item">
-                                    <a href="ficha_empleados.php" class="nav-link">
-                                        <i class="nav-icon fas fa-receipt"></i>
-                                        <p>Ficha de Empleados</p>
-                                    </a>
-                                </li>
                                 <li class="nav-item">
-                                    <a href="tipo_vacaciones.php" class="nav-link">
-                                        <i class="nav-icon fas fa-receipt"></i>
-                                        <p>Tipo de Vacaciones</p>
-                                    </a>
-                                </li>
-								<li class="nav-item">
                                     <a href="departamento.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
                                         <p>Departamentos</p>
@@ -168,22 +156,28 @@ $id_empresa=$_SESSION['idempresa'];
                                         <p>Motivos de Permisos</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="nombreturno.php" class="nav-link">
+                                        <i class="nav-icon fas fa-receipt"></i>
+                                        <p>Nombre Turnos</p>
+                                    </a>
+                                </li>
 								<li class="nav-item">
                                     <a href="sucursal.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
                                         <p>Sucursal</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="tipo_vacaciones.php" class="nav-link">
+                                        <i class="nav-icon fas fa-receipt"></i>
+                                        <p>Tipo de Vacaciones</p>
+                                    </a>
+                                </li>
 								<li class="nav-item">
                                     <a href="tipo_contrato.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
                                         <p>Tipo de Contrato</p>
-                                    </a>
-                                </li>
-								<li class="nav-item">
-                                    <a href="nombreturno.php" class="nav-link">
-                                        <i class="nav-icon fas fa-receipt"></i>
-                                        <p>Nombre Turnos</p>
                                     </a>
                                 </li>
                             </ul>
@@ -199,14 +193,14 @@ $id_empresa=$_SESSION['idempresa'];
                                 <p>Turnos<i class="fas fa-angle-left right"></i></p>
                             </a>
 							<ul class="nav nav-treeview">
-								<li class="nav-item">
-                                    <a href="creacion_turnos.php" class="nav-link">
-                                        <i class="nav-icon fas fa-coins"></i><p>Creacion de Turnos</p>
-                                    </a>
-                                </li>
                                 <li class="nav-item">
                                     <a href="asignacion_turnos.php" class="nav-link">
                                         <i class="nav-icon fas fa-chart-line"></i><p>Asignacion de Turnos</p>
+                                    </a>
+                                </li>
+								<li class="nav-item">
+                                    <a href="creacion_turnos.php" class="nav-link">
+                                        <i class="nav-icon fas fa-coins"></i><p>Creacion de Turnos</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -229,17 +223,25 @@ $id_empresa=$_SESSION['idempresa'];
 							<a href="#" class="nav-link">
 								<i class="nav-icon fas fa-list-ul"></i><p>Informes<i class="fas fa-angle-left right"></i></p>
 							</a>
-							<ul class="nav nav-treeview">
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="ficha_empleados.php" class="nav-link">
+                                        <i class="nav-icon fas fa-receipt"></i>
+                                        <p>Ficha de Empleados</p>
+                                    </a>
+                                </li>
+                            </ul>
+                            <ul class="nav nav-treeview">
 								<li class="nav-item">
-									<a href="permisos_aprobados.php" class="nav-link">
-										<i class="nav-icon fas fa-chart-line"></i><p>Permisos Aprobados</p>
+									<a href="ventas_producto.php" class="nav-link">
+										<i class="nav-icon fas fa-chart-line"></i><p>Listado de Ventas por Producto</p>
 									</a>
 								</li>                               
 							</ul>
 							<ul class="nav nav-treeview">
 								<li class="nav-item">
-									<a href="ventas_producto.php" class="nav-link">
-										<i class="nav-icon fas fa-chart-line"></i><p>Listado de Ventas por Producto</p>
+									<a href="permisos_aprobados.php" class="nav-link">
+										<i class="nav-icon fas fa-chart-line"></i><p>Permisos Aprobados</p>
 									</a>
 								</li>                               
 							</ul>
