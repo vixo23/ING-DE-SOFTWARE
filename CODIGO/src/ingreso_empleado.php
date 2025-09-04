@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $turno_id = 1;
     $status = 1;
 
-    $query = "INSERT INTO usuarios (rut, digitoRut, nombres, apellido1, apellido2, tipoContrato, direccion, comuna, telefono, celular, email, password, username, cargo, status, sucursal_id_sucursal, turnos_id_turnos, fechaCreacion, id_empresa) 
+    $query = "INSERT INTO usuarios (rut, digitoRut, nombres, apellido1, apellido2, id_tipoContrato, direccion, comuna, telefono, celular, email, password, username, cargo, status, id_sucursal, turnos_id_turnos, fechaCreacion, id_empresa) 
               VALUES ('$rut', '$digitoverif', '$nombre', '$apellido_paterno', '$apellido_materno', '$tipo_contrato', '$direccion', '$comuna', '$telefono_particular', '$celular', '$correo', '$password', '$username', '$cargo', '$status', '$sucursal_id', '$turno_id', '$fecha_ingreso', '$id_empresa')";
 
     if (mysqli_query($conexion, $query)) {

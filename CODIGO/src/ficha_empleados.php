@@ -43,9 +43,9 @@ $id_empresa = $_SESSION['idempresa'];
                               '<?php echo addslashes($data['apellido1']); ?>',
                               '<?php echo addslashes($data['apellido2']); ?>',
                               '<?php echo addslashes($data['email']); ?>',
-                              '<?php echo addslashes($data['tipoContrato']); ?>',
+                              '<?php echo addslashes($data['id_tipoContrato']); ?>',
                               '<?php echo addslashes($data['cargo']); ?>',
-                              '<?php echo addslashes($data['telefono']); ?>',
+                              '<?php echo addslashes($data['celular']); ?>',
                               '<?php echo addslashes($data['direccion']); ?>',
                               '<?php echo addslashes($data['fechaCreacion']); ?>'
                             )" class="btn btn-success">
