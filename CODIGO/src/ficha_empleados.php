@@ -11,7 +11,11 @@ $id_empresa = $_SESSION['idempresa'];
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
-
+<div class="mb-3 mt-3 ">
+    <button type="button" class="btn btn-warning" id="btnFiltro" onclick="filtraractivos()">
+        <i class="fa-solid fa-sliders"></i> Mostrar Solo Activos
+    </button>
+</div>
 <div class="table-responsive">
     <table class="table table-hover table-striped table-bordered mt-2" id="tbl">
         <thead class="thead-dark">
@@ -31,21 +35,21 @@ $id_empresa = $_SESSION['idempresa'];
                 while ($data = mysqli_fetch_assoc($query)) {
                     $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
                     ?>
-                    <tr>
+                    <tr data-status="<?php echo $data['status']; ?>">
                         <td><?php echo $data['id_usuarios']; ?></td>
                         <td><?php echo $data['nombres']; ?></td>
                         <td><?php echo $data['cargo']; ?></td>
                         <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editartipocontrato(
+                            <a href="#" onclick="editarfichaempleado(
                               <?php echo $data['id_usuarios']; ?>,
                               '<?php echo addslashes($data['nombres']); ?>',
                               '<?php echo addslashes($data['apellido1']); ?>',
                               '<?php echo addslashes($data['apellido2']); ?>',
                               '<?php echo addslashes($data['email']); ?>',
-                              '<?php echo addslashes($data['id_tipoContrato']); ?>',
+                              '<?php echo addslashes($data['id_tipocontrato']); ?>',
                               '<?php echo addslashes($data['cargo']); ?>',
-                              '<?php echo addslashes($data['celular']); ?>',
+                              '<?php echo addslashes($data['telefono']); ?>',
                               '<?php echo addslashes($data['direccion']); ?>',
                               '<?php echo addslashes($data['fechaCreacion']); ?>'
                             )" class="btn btn-success">
@@ -86,7 +90,7 @@ $id_empresa = $_SESSION['idempresa'];
 </div>
 
 <script>
-function editartipocontrato(id, nombre, apellido1, apellido2, correo, tipoContrato, cargo, telefono, direccion, fechaIngreso) {
+function editarfichaempleado(id, nombre, apellido1, apellido2, correo, tipoContrato, cargo, telefono, direccion, fechaIngreso) {
     document.getElementById('id_usuarios').textContent = id;
     document.getElementById('nombres').textContent = nombre;
     document.getElementById('apellido1').textContent = apellido1;
@@ -99,7 +103,46 @@ function editartipocontrato(id, nombre, apellido1, apellido2, correo, tipoContra
     document.getElementById('fecha_ingreso').textContent = fechaIngreso;
     $('#editarModal').modal('show');
 }
+// Variable global para saber si el filtro esta activo o no
+let filtroEstaActivo = false;
 
+function filtraractivos() {
+    // Alterna el estado del filtro
+    filtroEstaActivo = !filtroEstaActivo;
+
+    const boton = document.getElementById('btnFiltro');
+    const filas = document.querySelectorAll('#tbl tbody tr');
+
+    filas.forEach(fila => {
+        // Obtenemos el valor numérico del atributo 'data-status' de la fila
+        const estadoNumerico = fila.dataset.status;
+
+        if (filtroEstaActivo) {
+            // SI EL FILTRO ESTÁ ENCENDIDO:
+            // Oculta la fila si su estado es '0' (Inactivo)
+            if (estadoNumerico === '0') {
+                fila.style.display = 'none';
+            } else {
+                fila.style.display = ''; // Muestra la fila si es '1' (Activo)
+            }
+        } else {
+            // SI EL FILTRO ESTÁ APAGADO:
+            // Muestra todas las filas
+            fila.style.display = '';
+        }
+    });
+
+    // Actualiza el texto y el color del botón
+    if (filtroEstaActivo) {
+        boton.innerHTML = '<i class="fa-solid fa-sliders"></i> Mostrar Todos';
+        boton.classList.remove('btn-warning');
+        boton.classList.add('btn-info');
+    } else {
+        boton.innerHTML = '<i class="fa-solid fa-sliders"></i> Mostrar Solo Activos';
+        boton.classList.remove('btn-info');
+        boton.classList.add('btn-warning');
+    }
+}
 </script>
 
 <?php include_once "includes/footer.php"; ?>

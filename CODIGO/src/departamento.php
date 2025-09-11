@@ -2,22 +2,20 @@
 session_start();
 include "../conexion.php";
 include "includes/header.php";
-$id_empresa=$_SESSION['idempresa'];
+$id_empresa = $_SESSION['idempresa'];
 ?>
+
 <head>
-
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
+
 <div class="card">
     <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
-            <!-- Fila de Formulario -->
+        <form action="guardar_departamento.php" method="post" autocomplete="off" id="formulario">
             <div class="row">
-                <!-- Nombre -->
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="nombre">Descripcion</label>
@@ -25,7 +23,6 @@ $id_empresa=$_SESSION['idempresa'];
                         <input type="hidden" id="id" name="id">
                     </div>
                 </div>
-                <!-- Estado  -->
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="estado">Estado</label>
@@ -36,13 +33,11 @@ $id_empresa=$_SESSION['idempresa'];
                     </div>
                 </div>
             </div>
-            <!-- Botones -->
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
             <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
         </form>
     </div>
 </div>
-
 
 <div class="table-responsive">
     <table class="table table-hover table-striped table-bordered mt-2" id="tbl">
@@ -61,13 +56,13 @@ $id_empresa=$_SESSION['idempresa'];
             if ($result > 0) {
                 while ($data = mysqli_fetch_assoc($query)) {
                     $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
-                    ?>
+            ?>
                     <tr>
                         <td><?php echo $data['id_departamento']; ?></td>
                         <td><?php echo $data['descripcion']; ?></td>
                         <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editardepartamento(<?php echo $data['id_departamento']; ?>, '<?php echo $data['descripcion']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
+                            <a href="#" onclick="editardepartamento(<?php echo $data['id_departamento']; ?>, '<?php echo $data['descripcion']; ?>', <?php echo $data['status']; ?>)" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
                             </a>
                             <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_departamento']; ?>)" class="btn btn-warning">
@@ -81,7 +76,6 @@ $id_empresa=$_SESSION['idempresa'];
     </table>
 </div>
 
-<!-- Modal de Confirmación -->
 <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -92,7 +86,7 @@ $id_empresa=$_SESSION['idempresa'];
                 </button>
             </div>
             <div class="modal-body">
-                ¿Está seguro de que desea modificar el estado de este tipo contrato?
+                ¿Está seguro de que desea modificar el estado de este departamento?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -102,18 +96,17 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-<!-- Modal para editar tipo contrato -->
 <div class="modal fade" id="editarModal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editarModalLabel">Editar tipo contrato</h5>
+                <h5 class="modal-title" id="editarModalLabel">Editar Departamento</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="actualizar_tipocontrato.php" method="post" id="formEditar">
+                <form action="actualizar_departamento.php" method="post" id="formEditar">
                     <input type="hidden" id="idEditar" name="id">
                     <div class="form-group">
                         <label for="nombreEditar">Descripcion</label>
@@ -126,8 +119,6 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-
-<!-- Modal de Alerta -->
 <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -147,43 +138,41 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-<!-- jQuery y Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
-// Variable para guardar el ID del tipo de contrato
-let tipocontratoId;
+// Variable para guardar el ID del departamento
+let departamentoId;
 
-// Función para abrir el modal de confirmación
+// Funcion para abrir el modal de confirmacion
 function abrirModalConfirmacion(id) {
-    tipocontratoId = id; // Guardar el ID del garzón
+    departamentoId = id; // Guardar el ID
     $('#confirmModal').modal('show'); // Mostrar el modal
 }
 
-// Función para confirmar el cambio de estado
+// Funcion para confirmar el cambio de estado
 $('#confirmBtn').on('click', function() {
-    if (tipocontratoId) {
-        // Redirigir a cambiar_estado.php con el ID del garzón
-        window.location.href = `cambiar_estado.php?id=${tipocontratoId}`;
+    if (departamentoId) {
+        window.location.href = `cambiar_estado_departamento.php?id=${departamentoId}`;
     }
 });
 
-// Función para abrir el modal de edición
-function editartipocontrato(id, nombre, estado) {
-    // Rellenar el formulario de edición
+// Funcion para abrir el modal de edicion
+function editardepartamento(id, nombre, estado) {
+    // Rellenar el formulario de edicion
     $('#idEditar').val(id);
     $('#nombreEditar').val(nombre);
-    $('#editarModal').modal('show'); // Mostrar el modal de edición
+    $('#editarModal').modal('show'); // Mostrar el modal de edicion
 }
 
-// Función para limpiar el formulario
+// Funcion para limpiar el formulario
 function limpiar() {
     $('#formulario')[0].reset(); // Restablecer el formulario
 }
 
-// Función para mostrar alerta
+// Funcion para mostrar alerta
 function mostrarAlerta(mensaje) {
     $('#alertMessage').text(mensaje); // Rellenar el mensaje de alerta
     $('#alertModal').modal('show'); // Mostrar el modal de alerta

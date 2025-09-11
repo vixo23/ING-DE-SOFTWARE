@@ -1,0 +1,230 @@
+<?php
+require_once "../conexion.php";
+session_start();
+if (isset($_GET['detalle'])) {
+    $id = $_SESSION['idUser'];
+	$id_sala = $_GET['id_sala'];
+	$mesa = $_GET['mesa'];
+	$sql="(SELECT d.*, p.nombre, p.precio, p.imagen FROM temp_pedidos d INNER JOIN platos p ON d.id_producto = p.id WHERE d.id_usuario = $id)";
+    
+	$sql=$sql." UNION ALL (SELECT d.id, d.cantidad, d.precio,d.id_producto, e.id_usuario, e.id_sala, e.num_mesa, p.nombre, p.precio, p.imagen
+	FROM detalle_pedidos d INNER JOIN pedidos e ON d.id=e.id 
+	INNER JOIN platos p ON d.id_producto = p.id WHERE e.estado ='PENDIENTE' AND e.id_usuario = $id
+	AND e.id_sala=$id_sala AND e.num_mesa=$mesa)";
+	$datos = array();
+    $detalle = mysqli_query($conexion, $sql);
+    while ($row = mysqli_fetch_assoc($detalle)) {
+        $data['id'] = $row['id'];
+        $data['nombre'] = $row['nombre'];
+        $data['cantidad'] = $row['cantidad'];
+        $data['precio'] = $row['precio'];
+        $data['imagen'] = ($row['imagen'] == null) ? '../assets/img/default.png' : $row['imagen'];
+        $data['total'] = $data['precio'] * $data['cantidad'];
+        array_push($datos, $data);
+    }
+	
+    echo json_encode($datos);
+	//echo $sql;
+    die();
+} else if (isset($_GET['delete_detalle'])) {
+    $id_detalle = $_GET['id'];
+    $query = mysqli_query($conexion, "DELETE FROM temp_pedidos WHERE id = $id_detalle");
+    if ($query) {
+        $msg = "ok";
+    } else {
+        $msg = "Error";
+    }
+    echo $msg;
+    die();
+} else if (isset($_GET['detalle_cantidad'])) {
+    $id_detalle = $_GET['id'];
+    $cantidad = $_GET['cantidad'];
+    $query = mysqli_query($conexion, "UPDATE temp_pedidos set cantidad = $cantidad WHERE id = $id_detalle");
+    if ($query) {
+        $msg = "ok";
+    } else {
+        $msg = "Error";
+    }
+    echo $msg;
+    die();
+} else if (isset($_GET['procesarPedido'])) {
+    $id_sala = $_GET['id_sala'];
+    $id_user = $_SESSION['idUser'];
+    $mesa = $_GET['mesa'];
+    $observacion = $_GET['observacion'];
+    $consulta = mysqli_query($conexion, "SELECT d.*, p.nombre FROM temp_pedidos d INNER JOIN platos p ON d.id_producto = p.id WHERE d.id_usuario = $id_user");
+    $total = 0;
+    while ($row = mysqli_fetch_assoc($consulta)) {
+        $total += $row['cantidad'] * $row['precio'];
+    }
+    $insertar = mysqli_query($conexion, "INSERT INTO pedidos (id_sala, num_mesa, total, observacion, id_usuario) VALUES ($id_sala, $mesa, '$total', '$observacion', $id_user)");
+    $id_pedido = mysqli_insert_id($conexion);
+    if ($insertar == 1) {
+        //$insertarDet = 0;
+		
+
+        $consulta = mysqli_query($conexion, "SELECT d.*, p.nombre FROM temp_pedidos d INNER JOIN platos p ON d.id_producto = p.id WHERE d.id_usuario = $id_user");
+        while ($dato = mysqli_fetch_assoc($consulta)) {
+            $nombre = $dato['nombre'];
+            $cantidad = $dato['cantidad'];
+            $precio = $dato['precio'];
+			$id_producto = $dato['id_producto'];
+            $insertarDet = mysqli_query($conexion, "INSERT INTO detalle_pedidos (id_producto, nombre, precio, cantidad, id_pedido) VALUES ($id_producto,'$nombre', '$precio', $cantidad, $id_pedido)");
+        
+			$insertaweb= mysqli_query($conexionw, "INSERT INTO detalle_pedido (id_pedido, codigo_producto, descripcion, cantidad, observacion, estado) VALUES ($id_pedido,$id_producto,'$nombre', $cantidad,'$observacion',0)");
+		}
+        if ($insertarDet > 0) {			
+            $eliminar = mysqli_query($conexion, "DELETE FROM temp_pedidos WHERE id_usuario = $id_user");
+            $sala = mysqli_query($conexion, "SELECT * FROM salas WHERE id = $id_sala");
+            $resultSala = mysqli_fetch_assoc($sala);
+            $msg = array('mensaje' => $resultSala['mesas']);
+        }
+    } else {
+        $msg = array('mensaje' => 'error');
+    }
+
+    echo json_encode($msg);
+    die();
+} else if (isset($_GET['editarUsuario'])) {
+    $idusuario = $_GET['id'];
+    $sql = mysqli_query($conexion, "SELECT * FROM usuario WHERE idusuario = $idusuario");
+    $data = mysqli_fetch_array($sql);
+    echo json_encode($data);
+    exit;
+} else if (isset($_GET['editarProducto'])) {
+    $id = $_GET['id'];
+    $sql = mysqli_query($conexion, "SELECT * FROM platos WHERE id = $id");
+    $data = mysqli_fetch_array($sql);
+    echo json_encode($data);
+    exit;
+} else if (isset($_GET['editarSalon'])) {
+    $id = $_GET['id'];
+    $sql = mysqli_query($conexion, "SELECT * FROM salas WHERE id = $id");
+    $data = mysqli_fetch_array($sql);
+    echo json_encode($data);
+    exit;	
+}else if (isset($_GET['finalizarPedido'])) {
+    $id_sala = $_GET['id_sala'];
+    $id_user = $_SESSION['idUser'];
+    $mesa = $_GET['mesa'];
+	$tipo_documento = $_GET['tipo_documento']; 
+	$folio = $_GET['folio']; 
+	$tipo_pago = $_GET['tipo_pago']; 
+	$monto_pago = $_GET['monto_pago']; 
+	$total_pago = $_GET['total_pago']; 
+	
+	$total_pago=str_replace(",", '', $total_pago);
+	$total_pago=str_replace("$", '', $total_pago);
+	
+	$rescaja = mysqli_query($conexion, "SELECT id_control_caja FROM control_caja WHERE id_usuario=$id_user and fecha_termino IS NULL");
+    $data = mysqli_fetch_array($rescaja);
+	$id_caja=$data['id_control_caja'];
+	
+	$numpedido = mysqli_query($conexion, "SELECT id FROM pedidos WHERE id_sala=$id_sala AND num_mesa=$mesa AND estado='PENDIENTE' AND id_usuario=$id_user");
+    $data = mysqli_fetch_array($numpedido);
+	$id_pedido=$data['id'];
+	
+	$insertar = mysqli_query($conexion, "UPDATE pedidos SET estado='FINALIZADO' WHERE id_sala=$id_sala AND num_mesa=$mesa AND estado='PENDIENTE' AND id_usuario=$id_user");
+    if ($insertar) {
+		$querypago="INSERT INTO pagos (id_pedido, id_control_caja, id_forma_pago, tipo_documento, monto_pago) VALUES ('$id_pedido','$id_caja','$tipo_pago','$tipo_documento','$total_pago')";
+		//echo $querypago;
+		$insertarpago = mysqli_query($conexion, $querypago);
+		
+        $sala = mysqli_query($conexion, "SELECT * FROM salas WHERE id = $id_sala");
+        $resultSala = mysqli_fetch_assoc($sala);
+    	$msg = array('mensaje' => $resultSala['mesas']);
+    } else {
+        $msg = array('mensaje' => 'error');
+    }
+
+    echo json_encode($msg);
+    die();
+}
+if (isset($_POST['regDetalle'])) {
+    $id_producto = $_POST['id'];
+    $id_user = $_SESSION['idUser'];
+	$id_sala = $_POST['id_sala'];
+	$mesa = $_POST['id_mesa'];
+    $consulta = mysqli_query($conexion, "SELECT * FROM temp_pedidos WHERE id_producto = $id_producto AND id_usuario = $id_user");
+    $row = mysqli_fetch_assoc($consulta);
+    if (empty($row)) {
+        $producto = mysqli_query($conexion, "SELECT * FROM platos WHERE id = $id_producto");
+        $result = mysqli_fetch_assoc($producto);
+        $precio = $result['precio'];
+        $query = mysqli_query($conexion, "INSERT INTO temp_pedidos (cantidad, precio, id_producto, id_usuario, id_sala, id_mesa) VALUES (1, $precio, $id_producto, $id_user, $id_sala, $mesa)");
+    } else {
+        $nueva = $row['cantidad'] + 1;
+        $query = mysqli_query($conexion, "UPDATE temp_pedidos SET cantidad = $nueva WHERE id_producto = $id_producto AND id_usuario = $id_user");
+    }
+    if ($query) {
+        $msg = "registrado";
+    } else {
+        $msg = "Error al ingresar";
+    }
+    echo json_encode($msg);
+    die();
+}
+
+session_start();
+include "../conexion.php";
+
+// Conectar a la base de datos
+$conexion = mysql_connect('localhost', 'root', 'admin1025'); // Cambia los valores según tu configuración
+if (!$conexion) {
+    die('No se pudo conectar: ' . mysql_error());
+}
+
+// Seleccionar la base de datos
+$db_selected = mysql_select_db('resto', $conexion);
+if (!$db_selected) {
+    die ('No se pudo seleccionar la base de datos: ' . mysql_error());
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Obtener los datos enviados desde el formulario
+    $idUsuario = isset($_POST['id_usuario_value']) ? mysql_real_escape_string($_POST['id_usuario_value']) : 0; // ID del usuario
+    $idCaja = isset($_POST['id_caja']) ? mysql_real_escape_string($_POST['id_caja']) : 0; // ID de la caja
+    $idTurno = isset($_POST['id_turno']) ? mysql_real_escape_string($_POST['id_turno']) : 0; // ID del turno
+    $monto = isset($_POST['monto']) ? mysql_real_escape_string($_POST['monto']) : 0; // Monto ingresado
+    $descripcion = isset($_POST['descripcion']) ? mysql_real_escape_string($_POST['descripcion']) : ''; // Descripción
+    $fecha = isset($_POST['fecha']) ? mysql_real_escape_string($_POST['fecha']) : ''; // Fecha
+    $tipoMovimiento = isset($_POST['tipo_movimiento']) ? mysql_real_escape_string($_POST['tipo_movimiento']) : 0; // Tipo de movimiento (1 para ingresos)
+    $idControlCaja = isset($_POST['id_control_caja']) ? mysql_real_escape_string($_POST['id_control_caja']) : 0; // ID de control de caja
+
+    // Verificar que el ID del usuario sea válido
+    if ($idUsuario == 0) {
+        echo 'Error: El ID del usuario no es válido.';
+        exit; // Termina el script
+    }
+
+    // Realizar la consulta para insertar el movimiento en la tabla
+    $queryInsertar = "INSERT INTO movimientos_caja (id_usuario, id_caja, id_turno, id_control_caja, monto, descripcion, fecha, tipo_movimiento)
+                      VALUES ('$idUsuario', '$idCaja', '$idTurno', '$idControlCaja', '$monto', '$descripcion', '$fecha', '$tipoMovimiento')";
+
+    // Ejecutar la consulta
+    $resultadoInsertar = mysql_query($queryInsertar);
+
+    if ($resultadoInsertar) {
+        // Redirigir según el tipo de movimiento
+        if ($tipoMovimiento == 1) {
+            header('Location: ingresos.php'); // Redirige a ingresos.php
+            exit; // Termina el script después de redirigir
+        } else {
+            header('Location: egresos.php'); // Redirige a egresos.php
+            exit; // Termina el script después de redirigir
+        }
+    } else {
+        // Retornar un mensaje de error
+        echo 'Error al registrar el movimiento: ' . mysql_error();
+    }
+}
+
+
+
+
+
+// Cerrar la conexión al final
+mysql_close($conexion);
+
+

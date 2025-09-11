@@ -3,44 +3,79 @@ session_start();
 include "../conexion.php";
 include "includes/header.php";
 
-$id_empresa = $_SESSION['idempresa'];
+$id_empresa_sesion = $_SESSION['idempresa'];
+$mensaje = '';
 
+// --- BLOQUE DE GUARDADO SEGURO ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Recibimos los datos (ahora el de 'empresa' será un ID)
     $rut = $_POST['rut'];
-    $digitoverif = $_POST['digitoverif'];
-    $nombre = $_POST['nombre'];
-    $apellido_paterno = $_POST['apellido_paterno'];
-    $apellido_materno = $_POST['apellido_materno'];
+    $digitoRut = $_POST['digitoRut'];
+    $nombres = $_POST['nombres'];
+    $apellido1 = $_POST['apellido1'];
+    $apellido2 = $_POST['apellido2'];
     $direccion = $_POST['direccion'];
     $comuna = $_POST['comuna'];
     $celular = $_POST['celular'];
-    $correo = $_POST['correo'];
-    $telefono_particular = $_POST['telefono_particular'];
-    $tipo_contrato = $_POST['tipo_contrato'];
+    $correo = $_POST['email'];
+    $telefono = $_POST['telefono'];
+    $id_tipocontrato = $_POST['id_tipocontrato']; // Nota: esto también debería ser un combo con IDs
     $fecha_ingreso = $_POST['fecha_ingreso'];
-    $empresa = $_POST['empresa'];
-    $sucursal = $_POST['sucursal'];
-    $centro_costo = $_POST['centro_costo'];
-    $departamento = $_POST['departamento'];
-    $cargo = $_POST['cargo'];
-    $id_empresa = $_SESSION['idempresa'];
+    $empresa_id = $_POST['id_empresa']; // Recibimos el ID de la empresa seleccionada
+    $id_sucursal = $_POST['id_sucursal'];
+    $id_centrocosto =$_POST['id_centrocosto'];
+    $id_departamento =$_POST['id_departamento'];
+    $status =$_POST['status'];
 
-    // Valores fijos o de prueba (ajusta según tus necesidades)
-    $password = '1234';
+
+    // Valores fijos
+    $password_hash =1234; // Hashear la contraseña es más seguro
     $username = $rut;
-    $sucursal_id = 12;
     $turno_id = 1;
-    $status = 1;
 
-    $query = "INSERT INTO usuarios (rut, digitoRut, nombres, apellido1, apellido2, id_tipoContrato, direccion, comuna, telefono, celular, email, password, username, cargo, status, id_sucursal, turnos_id_turnos, fechaCreacion, id_empresa) 
-              VALUES ('$rut', '$digitoverif', '$nombre', '$apellido_paterno', '$apellido_materno', '$tipo_contrato', '$direccion', '$comuna', '$telefono_particular', '$celular', '$correo', '$password', '$username', '$cargo', '$status', '$sucursal_id', '$turno_id', '$fecha_ingreso', '$id_empresa')";
+    // Usamos sentencias preparadas para evitar inyección SQL
+    $query = "INSERT INTO usuarios (rut, digitoRut, nombres, apellido1, apellido2, id_tipocontrato, direccion, comuna, telefono, celular, email, password, username, cargo, status, id_sucursal, id_centrocosto, id_departamento, turnos_id_turnos, fechaCreacion, id_empresa) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    if ($stmt = $conexion->prepare($query)) {
+        // Vinculamos los parámetros
+        // Nota: debes ajustar los campos que faltan (cargo, sucursal, etc.)
+        $cargo_placeholder = $_POST['cargo']; // Temporal
 
-    if (mysqli_query($conexion, $query)) {
-        $mensaje = "Empleado registrado con éxito.";
+        $stmt->bind_param("ssssssssssssssisisisi", 
+            $rut, $digitoRut, $nombres, $apellido1, 
+            $apellido2, $id_tipocontrato, $direccion, 
+            $comuna, $telefono, $celular, $correo, $password_hash, $username, 
+            $cargo_placeholder, $status, $id_sucursal, $id_centrocosto, $id_departamento, 
+            $turno_id, $fecha_ingreso, $empresa_id
+        );
+
+        if ($stmt->execute()) {
+            $mensaje = "Empleado registrado con éxito.";
+        } else {
+            $mensaje = "Error al registrar: " . $stmt->error;
+        }
+        $stmt->close();
     } else {
-        $mensaje = "Error al registrar: " . mysqli_error($conexion);
+        $mensaje = "Error al preparar la consulta: " . $conexion->error;
     }
 }
+
+// --- NUEVO: CONSULTA PARA OBTENER LAS EMPRESAS ---
+$resultado_empresas = mysqli_query($conexion, "SELECT id_empresas, nombreFantasia FROM empresas WHERE status = 1 ORDER BY id_empresas");
+$resultado_sucursales = mysqli_query($conexion, "SELECT id_sucursal, nombre FROM sucursal WHERE status = 1 ORDER BY id_sucursal");
+$resultado_centrocostos = mysqli_query($conexion, "SELECT id_centro, descripcion FROM centro_costo WHERE status = 1 ORDER BY id_centro");
+$resultado_departamentos = mysqli_query($conexion, "SELECT id_departamento, descripcion FROM departamentos WHERE status = 1 ORDER BY id_departamento");
+$resultado_tipocontrato = mysqli_query($conexion, "SELECT id_tipocontrato, descripcion FROM tipo_contrato WHERE status = 1 ORDER BY id_tipocontrato");
+
+$comunas_rm = [
+    'Cerrillos', 'Cerro Navia', 'Conchalí', 'El Bosque', 'Estación Central', 
+    'Huechuraba', 'Independencia', 'La Cisterna', 'La Florida', 'La Granja', 
+    'La Pintana', 'La Reina', 'Las Condes', 'Lo Barnechea', 'Lo Espejo', 
+    'Lo Prado', 'Macul', 'Maipú', 'Ñuñoa', 'Pedro Aguirre Cerda', 'Peñalolén', 
+    'Providencia', 'Pudahuel', 'Quilicura', 'Quinta Normal', 'Recoleta', 
+    'Renca', 'San Joaquín', 'San Miguel', 'San Ramón', 'Santiago', 'Vitacura'
+];
 ?>
 
 <!DOCTYPE html>
@@ -75,23 +110,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="form-group">
-            <label for="digitoverif">Dígito Verificador:</label>
-            <input type="text" id="digitoverif" name="digitoverif" required>
+            <label for="digitoRut">Dígito Verificador:</label>
+            <input type="text" id="digitoRut" name="digitoRut" required>
         </div>
 
         <div class="form-group">
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" required>
+            <label for="nombres">Nombre:</label>
+            <input type="text" id="nombres" name="nombres" required>
         </div>
 
         <div class="form-group">
-            <label for="apellido_paterno">Apellido Paterno:</label>
-            <input type="text" id="apellido_paterno" name="apellido_paterno" required>
+            <label for="apellido1">Apellido Paterno:</label>
+            <input type="text" id="apellido1" name="apellido1" required>
         </div>
 
         <div class="form-group">
-            <label for="apellido_materno">Apellido Materno:</label>
-            <input type="text" id="apellido_materno" name="apellido_materno" required>
+            <label for="apellido2">Apellido Materno:</label>
+            <input type="text" id="apellido2" name="apellido2" required>
         </div>
 
         <div class="form-group">
@@ -101,7 +136,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-group">
             <label for="comuna">Comuna:</label>
-            <input type="text" id="comuna" name="comuna" required>
+            <select id="comuna" name="comuna" class="form-control" required>
+                <option value="">Seleccione una comuna...</option>
+                <?php
+                // Creamos una opcion por cada comuna en el array
+                foreach ($comunas_rm as $comuna) {
+                    echo '<option value="' . htmlspecialchars($comuna) . '">' . htmlspecialchars($comuna) . '</option>';
+                }
+                ?>
+            </select>
         </div>
 
         <div class="form-group">
@@ -110,33 +153,69 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="form-group">
-            <label for="correo">Correo Electrónico:</label>
-            <input type="email" id="correo" name="correo" required>
+            <label for="email">Correo Electrónico:</label>
+            <input type="email" id="email" name="email" required>
         </div>
 
         <div class="form-group">
-            <label for="telefono_particular">Teléfono Particular:</label>
-            <input type="text" id="telefono_particular" name="telefono_particular">
+            <label for="telefono">Telefono Particular:</label>
+            <input type="text" id="telefono" name="telefono">
         </div>
 
         <div class="form-group">
-            <label for="empresa">Empresa:</label>
-            <input type="text" id="empresa" name="empresa" required>
+            <label for="id_empresa">Empresa:</label>
+            <select id="id_empresa" name="id_empresa" class="form-control" required>
+                <option value="">Seleccione una empresa...</option>
+                <?php
+                // Iteramos sobre los resultados de la consulta de empresas
+                while ($fila_empresa = mysqli_fetch_assoc($resultado_empresas)) {
+                    // El 'value' es el ID, y el texto visible es el nombre
+                    echo '<option value="' . $fila_empresa['id_empresas'] . '">' . htmlspecialchars($fila_empresa['nombreFantasia']) . '</option>';
+                }
+                ?>
+            </select>
         </div>
 
         <div class="form-group">
-            <label for="sucursal">Sucursal:</label>
-            <input type="text" id="sucursal" name="sucursal" required>
+            <label for="id_sucursal">Sucursal:</label>
+            <select id="id_sucursal" name="id_sucursal" class="form-control" required>
+                <option value="">Seleccione una sucursal...</option>
+                <?php
+                // Iteramos sobre los resultados de la consulta de sucursal
+                while ($fila_sucursal = mysqli_fetch_assoc($resultado_sucursales)) {
+                    // El 'value' es el ID, y el texto visible es el nombre
+                    echo '<option value="' . $fila_sucursal['id_sucursal'] . '">' . htmlspecialchars($fila_sucursal['nombre']) . '</option>';
+                }
+                ?>
+            </select>
         </div>
 
         <div class="form-group">
-            <label for="centro_costo">Centro de Costo:</label>
-            <input type="text" id="centro_costo" name="centro_costo" required>
+            <label for="id_centrocosto">Centro de Costo:</label>
+            <select id="id_centrocosto" name="id_centrocosto" class="form-control" required>
+                <option value="">Seleccione un centro de costo...</option>
+                <?php
+                // Iteramos sobre los resultados de la consulta de sucursales
+                while ($fila_centrocosto = mysqli_fetch_assoc($resultado_centrocostos)) {
+                    // El 'value' es el ID, y el texto visible es el nombre
+                    echo '<option value="' . $fila_centrocosto['id_centro'] . '">' . htmlspecialchars($fila_centrocosto['descripcion']) . '</option>';
+                }
+                ?>
+            </select>
         </div>
 
         <div class="form-group">
-            <label for="departamento">Departamento:</label>
-            <input type="text" id="departamento" name="departamento" required>
+            <label for="id_departamento">Departamento:</label>
+            <select id="id_departamento" name="id_departamento" class="form-control" required>
+                <option value="">Seleccione un Departamento...</option>
+                <?php
+                // Iteramos sobre los resultados de la consulta de sucursales
+                while ($fila_departamento = mysqli_fetch_assoc($resultado_departamentos)) {
+                    // El 'value' es el ID, y el texto visible es el nombre
+                    echo '<option value="' . $fila_departamento['id_departamento'] . '">' . htmlspecialchars($fila_departamento['descripcion']) . '</option>';
+                }
+                ?>
+            </select>
         </div>
 
         <div class="form-group">
@@ -145,17 +224,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="form-group">
-            <label for="tipo_contrato">Tipo de Contrato:</label>
-            <select id="tipo_contrato" name="tipo_contrato" required>
-                <option value="">Seleccione...</option>
-                <option value="Plazo Fijo">Contrato Plazo Fijo</option>
-                <option value="Indefinido">Contrato Indefinido</option>
+            <label for="id_tipocontrato">Tipo de Contrato:</label>
+            <select id="id_tipocontrato" name="id_tipocontrato" class="form-control" required>
+                <option value="">Seleccione un Tipo de Contrato...</option>
+                <?php
+                // Iteramos sobre los resultados de la consulta de sucursales
+                while ($fila_tipo_contrato = mysqli_fetch_assoc($resultado_tipocontrato)) {
+                    // El 'value' es el ID, y el texto visible es el nombre
+                    echo '<option value="' . $fila_tipo_contrato['id_tipocontrato'] . '">' . htmlspecialchars($fila_tipo_contrato['descripcion']) . '</option>';
+                }
+                ?>
             </select>
         </div>
 
         <div class="form-group">
             <label for="fecha_ingreso">Fecha de Ingreso:</label>
             <input type="date" id="fecha_ingreso" name="fecha_ingreso" required>
+        </div>
+
+        <div class="form-group">
+            <label for="status">Estado:</label>
+            <select id="status" name="status" class="form-control" required>
+                <option value="1">Activo</option>
+                <option value="0">Inactivo</option>
+            </select>
         </div>
 
         <div class="form-group full-width">

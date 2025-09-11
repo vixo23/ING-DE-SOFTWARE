@@ -1,0 +1,114 @@
+<?php
+session_start();
+if ($_SESSION['rol'] == 1 || $_SESSION['rol'] == 3 || $_SESSION['rol'] == 2 ) {
+    include_once "includes/header.php";
+    
+    if ($_SESSION['rol'] == 1 || $_SESSION['rol'] == 2 || $_SESSION['rol'] == 3) {
+        $id_sala = isset($_GET['id_sala']) ? (int)$_GET['id_sala'] : 0;
+        $mesas = isset($_GET['mesas']) ? (int)$_GET['mesas'] : 0;
+        $mesa = isset($_POST['mesa']) ? (int)$_POST['mesa'] : 0;
+        
+        // Obtener el nombre del salón
+        $salon = mysqli_query($conexion, "SELECT nombre FROM salas WHERE id = $id_sala");
+        if ($salon && mysqli_num_rows($salon) > 0) {
+            $results = mysqli_fetch_assoc($salon);
+            $nombre_salon = $results['nombre'];
+        } else {
+            // Mensaje de error si no se encuentra el salón
+            $error_message = "Salón no encontrado";
+            echo "<script>
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: '$error_message',
+                    });
+                  </script>";
+         }
+        }
+?>
+
+    <div class="card card-primary card-outline">
+        <div class="card-header text-center">			
+            <a class="btn btn-success" href="mesas.php?id_sala=<?php echo $_GET['id_sala']?>&mesas=<?php echo $_GET['mesas'] ?>">Volver a Mesas</a>
+        </div>
+        <div class="card-header text-center">
+            <h3 class="card-title text-center">
+            <span class="my-3 text-center"><span class="badge badge-secondary">Salón <?php echo $nombre_salon; ?></span></span>
+            <span class="badge badge-secondary" >Mesa <?php echo $_GET['mesa']; ?></span>
+            <span class="badge badge-secondary" >Atendido por: <?php echo $_SESSION['garzon_name']; ?></span>
+            <span class="badge badge-secondary" style="background-color: <?php echo htmlspecialchars($_SESSION['garzon_color']); ?>;"></span>
+            <div class="col-md-3">
+                
+            </h3>
+
+
+            
+            
+        </div>	
+        <div class="card-body">
+            <div class="row">
+                <div class="col-7 col-sm-9">
+                    <div class="tab-content" id="vert-tabs-right-tabContent">
+                        <div class="tab-pane fade show active" id="vert-tabs-right-home" role="tabpanel" aria-labelledby="vert-tabs-right-home-tab">
+                            <input type="hidden" id="id_sala" value="<?php echo $_GET['id_sala'] ?>">
+                            <input type="hidden" id="mesa" value="<?php echo $_GET['mesa'] ?>">
+                            <div class="row">
+                            <?php
+include "../conexion.php";
+$query = mysqli_query($conexion, "SELECT * FROM platos WHERE estado = 1");
+$result = mysqli_num_rows($query);
+if ($result > 0) {
+    while ($data = mysqli_fetch_assoc($query)) { ?>
+        <div class="col-md-3">
+            <div class="col-12 text-center">
+                <img src="<?php echo ($data['imagen'] == null) ? '../assets/img/default.png' : $data['imagen']; ?>" width="110" height="110">
+            </div>
+            <h6 class="my-1 text-center" style="font-size: 14px;"><?php echo $data['nombre']; ?></h6>
+            <div class="bg-light py-1 px-2 mt-1 text-center">
+                <h6 class="mb-0" style="font-size: 14px;">$ <?php echo number_format($data['precio'], 0, '.', ','); ?></h6>
+            </div>
+            <div class="mt-2 text-center">
+                <a class="btn btn-primary btn-sm btn-block addDetalle" style="font-size: 20px;" href="#" data-id="<?php echo $data['id']; ?>">
+                    <i class="fas fa-cart-plus mr-1"></i> Agregar
+                </a>
+            </div>
+        </div>
+<?php }
+}
+?>
+
+
+                            </div>
+                        </div>
+
+                        <!-- Sección de ver Pedido -->
+                        <div class="tab-pane fade" id="pedido" role="tabpanel" aria-labelledby="pedido-tab">
+                            <div class="row" id="detalle_pedido">
+                               
+                            </div>
+                            
+                            <hr>
+                            <div class="form-group">
+                                <label for="observacion">Observaciones</label>
+                                <textarea id="observacion" class="form-control" rows="3" placeholder="Observaciones"></textarea>
+                            </div>
+                            <button class="btn btn-primary" type="button" id="realizar_pedido">Realizar pedido</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-5 col-sm-3">
+                    <div class="nav flex-column nav-tabs nav-tabs-right h-100" id="vert-tabs-right-tab" role="tablist" aria-orientation="vertical">
+                        <a class="nav-link active" id="vert-tabs-right-home-tab" data-toggle="pill" href="#vert-tabs-right-home" role="tab" aria-controls="vert-tabs-right-home" aria-selected="true">Platos</a>
+                        <a class="nav-link" id="pedido-tab" data-toggle="pill" href="#pedido" role="tab" aria-controls="pedido" aria-selected="false">ver Pedido</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.card -->
+    </div>
+<?php include_once "includes/footer.php";
+} else {
+    header('Location: permisos.php');
+}
+?>
+

@@ -38,7 +38,7 @@ $id_empresa=$_SESSION['idempresa'];
             </div>
             <!-- Botones -->
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+            <input type="button" value="limpiar" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
         </form>
     </div>
 </div>
