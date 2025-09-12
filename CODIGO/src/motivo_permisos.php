@@ -13,6 +13,9 @@ $id_empresa=$_SESSION['idempresa'];
 
 </head>
 <div class="card">
+    <div class="card-header">
+        <h2>Motivos de Permisos</h2>
+    </div>
     <div class="card-body">
         <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
             <!-- Fila de Formulario -->

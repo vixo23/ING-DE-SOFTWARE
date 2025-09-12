@@ -13,6 +13,9 @@ $id_empresa = $_SESSION['idempresa'];
 </head>
 
 <div class="card">
+    <div class="card-header">
+        <h2>Departamentos</h2>
+    </div>
     <div class="card-body">
         <form action="guardar_departamento.php" method="post" autocomplete="off" id="formulario">
             <div class="row">

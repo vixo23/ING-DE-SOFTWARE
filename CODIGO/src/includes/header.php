@@ -209,6 +209,11 @@ $id_empresa=$_SESSION['idempresa'];
                                 </li>
                             </ul>
                         </li>
+                        <li class="nav-item">
+                            <a href="vacaciones.php" class="nav-link">
+                                <i class="nav-icon fas fa-coffee"></i><p>Vacaciones</p>
+                            </a>
+                        </li>
 						<li class="nav-item">
                             <a href="informa_asistencia.php" class="nav-link">
                                 <i class="nav-icon fas fa-coffee"></i><p>Informe de Asistencia</p>

@@ -13,6 +13,9 @@ $id_empresa=$_SESSION['idempresa'];
 
 </head>
 <div class="card">
+    <div class="card-header">
+        <h2>Sucursal</h2>
+    </div>
     <div class="card-body">
         <form action="" method="post" autocomplete="off" id="formulario">       
             <!-- Fila de Formulario -->
@@ -61,15 +64,15 @@ $id_empresa=$_SESSION['idempresa'];
             $result = mysqli_num_rows($query);
             if ($result > 0) {
                 while ($data = mysqli_fetch_assoc($query)) {
-                    $estado = ($data['statusSucursal'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
+                    $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
                     ?>
                     <tr>
                         <td><?php echo $data['id_sucursal']; ?></td>
                         <td><?php echo $data['nombre']; ?></td>
-                        <td><?php echo $data['dirreccion']; ?></td>
+                        <td><?php echo $data['direccion']; ?></td>
                         <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_sucursal']; ?>, '<?php echo $data['nombre']; ?>',  <?php echo $data['statusSucursal']; ?>)" class="btn btn-success">
+                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_sucursal']; ?>, '<?php echo $data['nombre']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
                             </a>
                             <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_sucursal']; ?>)" class="btn btn-warning">
