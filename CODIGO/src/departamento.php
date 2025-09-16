@@ -1,8 +1,43 @@
 <?php
 session_start();
 include "../conexion.php";
+
+$id_empresa=$_SESSION['idempresa'];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['estado'])) {
+    $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $estado = (int)$_POST['estado'];
+    
+    // --- NUEVA LÍNEA ---
+    // Obtenemos la fecha y hora actual
+    $fechaCreacion = date('Y-m-d'); 
+
+    // Validar que no esté vacío
+    if (!empty($descripcion)) {
+        // --- CONSULTA MODIFICADA ---
+        // Añadimos la columna 'fechaCreacion' y su valor '$fechaCreacion'
+        $query_insert = mysqli_query($conexion, "INSERT INTO departamentos (descripcion, status, id_empresas, fechaCreacion) VALUES ('$descripcion', $estado, $id_empresa, '$fechaCreacion')");
+
+        if ($query_insert) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Departamento registrado correctamente.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        } else {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Error al registrar el departamento.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        }
+        header("Location: departamento.php");
+        exit;
+    }
+}
 include "includes/header.php";
-$id_empresa = $_SESSION['idempresa'];
 ?>
 
 <head>
@@ -17,15 +52,16 @@ $id_empresa = $_SESSION['idempresa'];
         <h2>Departamentos</h2>
     </div>
     <div class="card-body">
-        <form action="guardar_departamento.php" method="post" autocomplete="off" id="formulario">
+        <form action="" method="post" autocomplete="off" id="formulario">       
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="nombre">Descripcion</label>
-                        <input type="text" class="form-control" placeholder="Ingrese Descripcion" name="nombre" id="nombre" required>
+                        <input type="text" class="form-control" placeholder="Ingrese Descripcion de departamento" name="nombre" id="nombre" required>
                         <input type="hidden" id="id" name="id">
                     </div>
                 </div>
+                
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="estado">Estado</label>
@@ -37,7 +73,7 @@ $id_empresa = $_SESSION['idempresa'];
                 </div>
             </div>
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+            <input type="button" value="Limpiar" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
         </form>
     </div>
 </div>
@@ -48,7 +84,7 @@ $id_empresa = $_SESSION['idempresa'];
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
-                <th>Estado</th>
+                <th>Fecha de Creación</th> <th>Estado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -63,7 +99,7 @@ $id_empresa = $_SESSION['idempresa'];
                     <tr>
                         <td><?php echo $data['id_departamento']; ?></td>
                         <td><?php echo $data['descripcion']; ?></td>
-                        <td><?php echo $estado; ?></td>
+                        <td><?php echo $data['fechaCreacion']; ?></td> <td><?php echo $estado; ?></td>
                         <td>
                             <a href="#" onclick="editardepartamento(<?php echo $data['id_departamento']; ?>, '<?php echo $data['descripcion']; ?>', <?php echo $data['status']; ?>)" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
