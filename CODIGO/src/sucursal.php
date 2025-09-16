@@ -1,8 +1,41 @@
 <?php
 session_start();
 include "../conexion.php";
+$id_empresa = $_SESSION['idempresa'];
+
+// Procesar el formulario ANTES de cargar HTML
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['direccion'], $_POST['comuna'], $_POST['estado'], $_POST['tipo'])) {
+    $nombre = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $direccion = mysqli_real_escape_string($conexion, trim($_POST['direccion']));
+    $comuna = mysqli_real_escape_string($conexion, trim($_POST['comuna']));
+    $estado = (int)$_POST['estado'];
+    $tipo = mysqli_real_escape_string($conexion, trim($_POST['tipo']));
+
+    if (!empty($nombre) && !empty($direccion) && !empty($comuna) && !empty($tipo)) {
+        $query_insert = mysqli_query($conexion, "INSERT INTO sucursal (nombre, direccion, comuna, status, empresas_id_empresas, tipo) 
+                                                 VALUES ('$nombre', '$direccion', '$comuna', $estado, $id_empresa, '$tipo')");
+
+        if ($query_insert) {
+            $_SESSION['msg'] = '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    Sucursal registrada correctamente.
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>';
+        } else {
+            $_SESSION['msg'] = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    Error al registrar la sucursal.
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>';
+        }
+        //  Redirigir para evitar duplicados al refrescar
+        header("Location: sucursal.php");
+        exit;
+    }
+}
 include "includes/header.php";
-$id_empresa=$_SESSION['idempresa'];
 ?>
 <head>
 
@@ -17,18 +50,38 @@ $id_empresa=$_SESSION['idempresa'];
         <h2>Sucursal</h2>
     </div>
     <div class="card-body">
+        <!-- Mostrar mensajes de éxito o error -->
+        <?php
+        if (isset($_SESSION['msg'])) {
+            echo $_SESSION['msg'];
+            unset($_SESSION['msg']);
+        }
+        ?>
+
         <form action="" method="post" autocomplete="off" id="formulario">       
-            <!-- Fila de Formulario -->
             <div class="row">
                 <!-- Nombre -->
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="nombre">Descripcion</label>
-                        <input type="text" class="form-control" placeholder="Ingrese Descripcion" name="nombre" id="nombre" required>
-                        <input type="hidden" id="id" name="id">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" class="form-control" placeholder="Ingrese Nombre" name="nombre" id="nombre" required>
                     </div>
                 </div>
-                <!-- Estado  -->
+                <!-- Dirección -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" class="form-control" placeholder="Ingrese Dirección" name="direccion" id="direccion" required>
+                    </div>
+                </div>
+                <!-- Comuna -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="comuna">Comuna</label>
+                        <input type="text" class="form-control" placeholder="Ingrese Comuna" name="comuna" id="comuna" required>
+                    </div>
+                </div>
+                <!-- Estado -->
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="estado">Estado</label>
@@ -38,10 +91,20 @@ $id_empresa=$_SESSION['idempresa'];
                         </select>
                     </div>
                 </div>
+                <!-- Tipo -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="tipo">Tipo</label>
+                        <select id="tipo" class="form-control" name="tipo" required>
+                            <option value="Matriz">Matriz</option>
+                            <option value="Sucursal">Sucursal</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <!-- Botones -->
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+            <input type="button" value="limpiar" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
         </form>
     </div>
 </div>
@@ -54,6 +117,8 @@ $id_empresa=$_SESSION['idempresa'];
                 <th>#</th>
                 <th>Nombre</th>
                 <th>Direccion</th>
+                <th>Comuna</th>
+                <th>Tipo</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -70,9 +135,11 @@ $id_empresa=$_SESSION['idempresa'];
                         <td><?php echo $data['id_sucursal']; ?></td>
                         <td><?php echo $data['nombre']; ?></td>
                         <td><?php echo $data['direccion']; ?></td>
+                        <td><?php echo $data['comuna']; ?></td>
+                        <td><?php echo $data['tipo']; ?></td>
                         <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_sucursal']; ?>, '<?php echo $data['nombre']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
+                            <a href="#" onclick="editarsucursal(<?php echo $data['id_sucursal']; ?>, '<?php echo $data['nombre']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
                             </a>
                             <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_sucursal']; ?>)" class="btn btn-warning">
@@ -112,7 +179,7 @@ $id_empresa=$_SESSION['idempresa'];
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editarModalLabel">Editar tipo contrato</h5>
+                <h5 class="modal-title" id="editarModalLabel">Editar Sucursal</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>

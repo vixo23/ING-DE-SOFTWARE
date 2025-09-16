@@ -3,6 +3,34 @@ session_start();
 include "../conexion.php";
 include "includes/header.php";
 $id_empresa=$_SESSION['idempresa'];
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['estado'])) {
+    $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $estado = (int)$_POST['estado'];
+    $fechaCreacion = date('Y-m-d');
+
+    if (!empty($descripcion)) {
+        $query_insert = mysqli_query($conexion, "INSERT INTO motivos_permisos (descripcion, status, id_empresa, fechaCreacion) VALUES ('$descripcion', $estado, $id_empresa, $fechaCreacion)");
+
+        if ($query_insert) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Motivo de permiso registrado correctamente.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        } else {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Error al registrar el motivo de permiso.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        }
+        header("Location: motivo_permisos.php");
+        exit;
+    }
+}
+
 ?>
 <head>
 
@@ -17,7 +45,7 @@ $id_empresa=$_SESSION['idempresa'];
         <h2>Motivos de Permisos</h2>
     </div>
     <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
+        <form action="" method="post" autocomplete="off" id="formulario">       
             <!-- Fila de Formulario -->
             <div class="row">
                 <!-- Nombre -->
@@ -41,7 +69,7 @@ $id_empresa=$_SESSION['idempresa'];
             </div>
             <!-- Botones -->
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+            <input type="button" value="Limpiar" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
         </form>
     </div>
 </div>
@@ -53,9 +81,8 @@ $id_empresa=$_SESSION['idempresa'];
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
-                <th>Estado</th>
+                <th>Fecha de Creación</th> <th>Estado</th>
                 <th>Acciones</th>
-            </tr>
         </thead>
         <tbody>
             <?php
@@ -68,7 +95,8 @@ $id_empresa=$_SESSION['idempresa'];
                     <tr>
                         <td><?php echo $data['id_motivo']; ?></td>
                         <td><?php echo $data['descripcion']; ?></td>
-                        <td><?php echo $estado; ?></td>
+                        <td><?php echo $data['fecha_Creacion']; ?></td> 
+                        <td><?php echo $estado; ?></td>                        
                         <td>
                             <a href="#" onclick="editarmotivo(<?php echo $data['id_motivo']; ?>, '<?php echo $data['descripcion']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
