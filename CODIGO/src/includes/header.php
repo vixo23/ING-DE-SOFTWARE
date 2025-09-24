@@ -162,6 +162,12 @@ $id_empresa=$_SESSION['idempresa'];
                                         <p>Nombre Turnos</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="permisos.php" class="nav-link">
+                                        <i class="nav-icon fas fa-receipt"></i>
+                                        <p>Permisos</p>
+                                    </a>
+                                </li>
 								<li class="nav-item">
                                     <a href="sucursal.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
