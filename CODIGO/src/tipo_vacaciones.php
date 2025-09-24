@@ -2,47 +2,64 @@
 session_start();
 include "../conexion.php";
 include "includes/header.php";
-$id_empresa=$_SESSION['idempresa'];
+
+// Empresa de sesión
+$id_empresa = isset($_SESSION['idempresa']) ? (int)$_SESSION['idempresa'] : 0;
+
+// Procesamiento del formulario
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['estado'])) {
+
+    $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $estado = (int)$_POST['estado'];
+
+    if ($id_empresa <= 0) {
+        echo '<div class="alert alert-danger">Error: Empresa no válida en la sesión.</div>';
+    } elseif (empty($descripcion)) {
+        echo '<div class="alert alert-warning">Debe ingresar una descripción válida.</div>';
+    } else {
+        $sql = "INSERT INTO tipo_vacaciones (descripcion, status, id_empresas) VALUES ('$descripcion', $estado, $id_empresa)";
+        $query_insert = mysqli_query($conexion, $sql);
+
+        if ($query_insert) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Tipo de vacación registrado correctamente.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        } else {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Error al registrar el tipo de vacación: ' . mysqli_error($conexion) . '
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>';
+        }
+    }
+}
+
 ?>
-<head>
 
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<div class="container mt-4">
+    <h2>Tipo de Vacaciones</h2>
+    <form id="formulario" method="post">
+        <div class="form-group">
+            <label for="nombre">Descripción</label>
+            <input type="text" name="nombre" id="nombre" class="form-control" required>
+        </div>
 
-</head>
-<div class="card">
-    <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
-            <!-- Fila de Formulario -->
-            <div class="row">
-                <!-- Nombre -->
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="nombre">Descripcion</label>
-                        <input type="text" class="form-control" placeholder="Ingrese Descripcion" name="nombre" id="nombre" required>
-                        <input type="hidden" id="id" name="id">
-                    </div>
-                </div>
-                <!-- Estado  -->
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="estado">Estado</label>
-                        <select id="estado" class="form-control" name="estado" required>
-                            <option value="1">Activo</option>
-                            <option value="0">Inactivo</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <!-- Botones -->
-            <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
-        </form>
-    </div>
+        <div class="form-group">
+            <label for="estado">Estado</label>
+            <select name="estado" id="estado" class="form-control" required>
+                <option value="1">Activo</option>
+                <option value="0">Inactivo</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Registrar</button>
+        <button type="button" class="btn btn-info mt-2" data-toggle="modal" data-target="#modalTiposVacaciones">Ver Todos</button>
+    </form>
 </div>
-
 
 <div class="table-responsive">
     <table class="table table-hover table-striped table-bordered mt-2" id="tbl">
@@ -67,9 +84,6 @@ $id_empresa=$_SESSION['idempresa'];
                         <td><?php echo $data['descripcion']; ?></td>
                         <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_tipovacacion']; ?>, '<?php echo $data['descripcion']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
-                                <i class='fas fa-edit'></i>
-                            </a>
                             <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipovacacion']; ?>)" class="btn btn-warning">
                                 <i class='fas fa-exchange-alt'></i> Cambiar Estado
                             </a>
@@ -80,7 +94,6 @@ $id_empresa=$_SESSION['idempresa'];
         </tbody>
     </table>
 </div>
-
 <!-- Modal de Confirmación -->
 <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -92,7 +105,7 @@ $id_empresa=$_SESSION['idempresa'];
                 </button>
             </div>
             <div class="modal-body">
-                ¿Está seguro de que desea modificar el estado de este tipo contrato?
+                ¿Está seguro de que desea modificar el estado de este tipo de vacacion?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -101,93 +114,26 @@ $id_empresa=$_SESSION['idempresa'];
         </div>
     </div>
 </div>
-
-<!-- Modal para editar tipo contrato -->
-<div class="modal fade" id="editarModal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarModalLabel">Editar tipo contrato</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form action="actualizar_tipocontrato.php" method="post" id="formEditar">
-                    <input type="hidden" id="idEditar" name="id">
-                    <div class="form-group">
-                        <label for="nombreEditar">Descripcion</label>
-                        <input type="text" class="form-control" id="nombreEditar" name="nombre" required>
-                    </div>
-                    <input type="submit" value="Actualizar" class="btn btn-primary">
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<!-- Modal de Alerta -->
-<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="alertModalLabel">Alerta</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="alertMessage">Este es un mensaje de alerta.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Aceptar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- jQuery y Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
 // Variable para guardar el ID del tipo de contrato
-let tipocontratoId;
+let tipovacacionId;
 
 // Función para abrir el modal de confirmación
 function abrirModalConfirmacion(id) {
-    tipocontratoId = id; // Guardar el ID del garzón
+    tipovacacionId = id; // Guardar el ID del garzón
     $('#confirmModal').modal('show'); // Mostrar el modal
 }
 
 // Función para confirmar el cambio de estado
 $('#confirmBtn').on('click', function() {
-    if (tipocontratoId) {
+    if (tipovacacionId) {
         // Redirigir a cambiar_estado.php con el ID del garzón
-        window.location.href = `cambiar_estado.php?id=${tipocontratoId}`;
+        window.location.href = `cambiar_estado_tipo_vacaciones.php?id=${tipovacacionId}`;
     }
 });
-
-// Función para abrir el modal de edición
-function editartipocontrato(id, nombre, estado) {
-    // Rellenar el formulario de edición
-    $('#idEditar').val(id);
-    $('#nombreEditar').val(nombre);
-    $('#editarModal').modal('show'); // Mostrar el modal de edición
-}
-
-// Función para limpiar el formulario
-function limpiar() {
-    $('#formulario')[0].reset(); // Restablecer el formulario
-}
-
-// Función para mostrar alerta
-function mostrarAlerta(mensaje) {
-    $('#alertMessage').text(mensaje); // Rellenar el mensaje de alerta
-    $('#alertModal').modal('show'); // Mostrar el modal de alerta
-}
 </script>
 
-<?php include_once "includes/footer.php"; ?>
+<?php include "includes/footer.php"; ?>

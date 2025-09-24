@@ -1,8 +1,62 @@
 <?php
 session_start();
 include "../conexion.php";
-include "includes/header.php";
 $id_empresa=$_SESSION['idempresa'];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion']) && $_POST['accion'] === "insertar") {
+    $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $estado = (int)$_POST['estado'];
+    $descripcion_turno = mysqli_real_escape_string($conexion, trim($_POST['descripcion_turno']));
+
+    // Validar que la descripción no esté vacía
+    if (!empty($descripcion)) {
+        $query_insert = mysqli_query($conexion, "INSERT INTO tipo_contrato (descripcion, status, descripcion_turno, id_empresa) 
+                                                  VALUES ('$descripcion', $estado, '$descripcion_turno', $id_empresa)");
+
+        if ($query_insert) {
+            $_SESSION['msg'] = '<div class="alert alert-success alert-dismissible fade show">Tipo de contrato registrado correctamente.
+                                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                </div>';
+        } else {
+            $_SESSION['msg'] = '<div class="alert alert-danger alert-dismissible fade show">Error al registrar el tipo de contrato.
+                                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                </div>';
+        }
+    } else {
+        $_SESSION['msg'] = '<div class="alert alert-warning alert-dismissible fade show">El campo descripción es obligatorio.
+                              <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            </div>';
+    }
+    header("Location: tipo_contrato.php");
+    exit;
+}
+
+// Actualizar contrato
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion']) && $_POST['accion'] === "actualizar") {
+    $id = (int)$_POST['id'];
+    $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
+    $estado = (int)$_POST['estado'];
+    $descripcion_turno = mysqli_real_escape_string($conexion, trim($_POST['descripcion_turno']));
+
+    $query_update = mysqli_query($conexion, "UPDATE tipo_contrato 
+                                             SET descripcion='$descripcion', status=$estado, descripcion_turno='$descripcion_turno' 
+                                             WHERE id_tipocontrato=$id AND id_empresa=$id_empresa");
+
+    if ($query_update) {
+        $_SESSION['msg'] = '<div class="alert alert-success alert-dismissible fade show">Tipo contrato actualizado correctamente.
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            </div>';
+    } else {
+        $_SESSION['msg'] = '<div class="alert alert-danger alert-dismissible fade show">Error al actualizar el tipo contrato.
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            </div>';
+    }
+    header("Location: tipo_contrato.php");
+    exit;
+}
+
+
+include "includes/header.php";
 ?>
 <head>
 
@@ -13,20 +67,29 @@ $id_empresa=$_SESSION['idempresa'];
 
 </head>
 <div class="card">
+    <div class="card-header">
+        <h2>Tipo de Contrato</h2>
+    </div>
     <div class="card-body">
-        <form action="guardar_tipocontrato.php" method="post" autocomplete="off" id="formulario">       
-            <!-- Fila de Formulario -->
+        <?php
+        if (isset($_SESSION['msg'])) {
+            echo $_SESSION['msg'];
+            unset($_SESSION['msg']);
+        }
+        ?>
+        <form action="" method="post" autocomplete="off" id="formulario">
+            <input type="hidden" name="accion" value="insertar">
             <div class="row">
                 <!-- Nombre -->
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="nombre">Descripcion</label>
                         <input type="text" class="form-control" placeholder="Ingrese Descripcion" name="nombre" id="nombre" required>
-                        <input type="hidden" id="id" name="id">
                     </div>
                 </div>
-                <!-- Estado  -->
-                <div class="col-md-3">
+
+                <!-- Estado -->
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="estado">Estado</label>
                         <select id="estado" class="form-control" name="estado" required>
@@ -35,21 +98,31 @@ $id_empresa=$_SESSION['idempresa'];
                         </select>
                     </div>
                 </div>
+
+                <!-- Descripción del Turno -->
+                <div class="col-md-7">
+                    <div class="form-group">
+                        <label for="descripcion_turno">Descripción</label>
+                        <textarea class="form-control" id="descripcion_turno" name="descripcion_turno" maxlength="100" placeholder="Agregue una descripción..." rows="2"></textarea>
+                    </div>
+                </div>
             </div>
+
             <!-- Botones -->
-            <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+            <input type="submit" value="Registrar" class="btn btn-primary">
+            <input type="button" value="Limpiar" class="btn btn-success" onclick="limpiar()">
         </form>
     </div>
 </div>
 
-
-<div class="table-responsive">
-    <table class="table table-hover table-striped table-bordered mt-2" id="tbl">
+<!-- Tabla -->
+<div class="table-responsive mt-3">
+    <table class="table table-hover table-striped table-bordered">
         <thead class="thead-dark">
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
+                <th>Descripción</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -57,26 +130,28 @@ $id_empresa=$_SESSION['idempresa'];
         <tbody>
             <?php
             $query = mysqli_query($conexion, "SELECT * FROM tipo_contrato WHERE id_empresa='$id_empresa' ORDER BY descripcion");
-            $result = mysqli_num_rows($query);
-            if ($result > 0) {
-                while ($data = mysqli_fetch_assoc($query)) {
-                    $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
-                    ?>
-                    <tr>
-                        <td><?php echo $data['id_tipocontrato']; ?></td>
-                        <td><?php echo $data['descripcion']; ?></td>
-                        <td><?php echo $estado; ?></td>
-                        <td>
-                            <a href="#" onclick="editartipocontrato(<?php echo $data['id_tipocontrato']; ?>, '<?php echo $data['descripcion']; ?>',  <?php echo $data['status']; ?>)" class="btn btn-success">
-                                <i class='fas fa-edit'></i>
-                            </a>
-                            <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipocontrato']; ?>)" class="btn btn-warning">
-                                <i class='fas fa-exchange-alt'></i> Cambiar Estado
-                            </a>
-                        </td>
-                    </tr>
-            <?php }
-            } ?>
+            while ($data = mysqli_fetch_assoc($query)) {
+                $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
+                ?>
+                <tr>
+                    <td><?php echo $data['id_tipocontrato']; ?></td>
+                    <td><?php echo htmlspecialchars($data['descripcion']); ?></td>
+                    <td><?php echo htmlspecialchars($data['descripcion_turno']); ?></td>
+                    <td><?php echo $estado; ?></td>
+                    <td>
+                        <a href="#" onclick="editartipocontrato(
+                            <?php echo $data['id_tipocontrato']; ?>,
+                            '<?php echo addslashes($data['descripcion']); ?>',
+                            '<?php echo addslashes($data['descripcion_turno']); ?>',
+                            <?php echo $data['status']; ?>
+                        )" class="btn btn-success btn-sm"><i class='fas fa-edit'></i></a>
+
+                        <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipocontrato']; ?>)" class="btn btn-warning btn-sm">
+                            <i class='fas fa-exchange-alt'></i> Cambiar Estado
+                        </a>
+                    </td>
+                </tr>
+            <?php } ?>
         </tbody>
     </table>
 </div>
@@ -102,22 +177,32 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-<!-- Modal para editar tipo contrato -->
-<div class="modal fade" id="editarModal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
+<!-- Modal Editar -->
+<div class="modal fade" id="editarModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editarModalLabel">Editar tipo contrato</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title">Editar Tipo Contrato</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form action="actualizar_tipocontrato.php" method="post" id="formEditar">
+                <form action="" method="post">
+                    <input type="hidden" name="accion" value="actualizar">
                     <input type="hidden" id="idEditar" name="id">
                     <div class="form-group">
-                        <label for="nombreEditar">Descripcion</label>
+                        <label for="nombreEditar">Nombre</label>
                         <input type="text" class="form-control" id="nombreEditar" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcionTurnoEditar">Descripción</label>
+                        <textarea class="form-control" id="descripcionTurnoEditar" name="descripcion_turno" maxlength="100" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="estadoEditar">Estado</label>
+                        <select id="estadoEditar" class="form-control" name="estado" required>
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
                     </div>
                     <input type="submit" value="Actualizar" class="btn btn-primary">
                 </form>
@@ -126,67 +211,36 @@ $id_empresa=$_SESSION['idempresa'];
     </div>
 </div>
 
-
-<!-- Modal de Alerta -->
-<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="alertModalLabel">Alerta</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="alertMessage">Este es un mensaje de alerta.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Aceptar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- jQuery y Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Variable para guardar el ID del tipo de contrato
-let tipocontratoId;
 
-// Función para abrir el modal de confirmación
+let tipocontratoId; // Variable global para guardar el ID
+
 function abrirModalConfirmacion(id) {
-    tipocontratoId = id; // Guardar el ID del garzón
-    $('#confirmModal').modal('show'); // Mostrar el modal
+    tipocontratoId = id; // Guardar el ID
+    $('#confirmModal').modal('show');
 }
 
-// Función para confirmar el cambio de estado
+// Evento para el botón de confirmar
 $('#confirmBtn').on('click', function() {
+    // Usamos la variable 'motivoId' que llenamos antes
     if (tipocontratoId) {
-        // Redirigir a cambiar_estado.php con el ID del garzón
-        window.location.href = `cambiar_estado.php?id=${tipocontratoId}`;
+        // Debes crear este archivo PHP para manejar el cambio de estado
+        window.location.href = `cambiar_estado_tipo_contrato.php?id=${tipocontratoId}`;
     }
 });
+function limpiar() {
+    $('#formulario')[0].reset();
+}
 
-// Función para abrir el modal de edición
-function editartipocontrato(id, nombre, estado) {
-    // Rellenar el formulario de edición
+function editartipocontrato(id, nombre, descripcion_turno, estado) {
     $('#idEditar').val(id);
     $('#nombreEditar').val(nombre);
-    $('#editarModal').modal('show'); // Mostrar el modal de edición
-}
-
-// Función para limpiar el formulario
-function limpiar() {
-    $('#formulario')[0].reset(); // Restablecer el formulario
-}
-
-// Función para mostrar alerta
-function mostrarAlerta(mensaje) {
-    $('#alertMessage').text(mensaje); // Rellenar el mensaje de alerta
-    $('#alertModal').modal('show'); // Mostrar el modal de alerta
+    $('#descripcionTurnoEditar').val(descripcion_turno);
+    $('#estadoEditar').val(estado);
+    $('#editarModal').modal('show');
 }
 </script>
 
