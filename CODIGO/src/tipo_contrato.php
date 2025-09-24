@@ -54,20 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion']) && $_POST['a
     header("Location: tipo_contrato.php");
     exit;
 }
-// Cambiar estado
-if (isset($_GET['cambiar_estado'])) {
-    $id = (int)$_GET['cambiar_estado'];
-    $query = mysqli_query($conexion, "SELECT status FROM tipo_contrato WHERE id_tipocontrato=$id AND id_empresa=$id_empresa");
-    if ($data = mysqli_fetch_assoc($query)) {
-        $nuevo_estado = ($data['status'] == 1) ? 0 : 1;
-        mysqli_query($conexion, "UPDATE tipo_contrato SET status=$nuevo_estado WHERE id_tipocontrato=$id AND id_empresa=$id_empresa");
-        $_SESSION['msg'] = '<div class="alert alert-success alert-dismissible fade show">Estado modificado correctamente.
-                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            </div>';
-    }
-    header("Location: tipo_contrato.php");
-    exit;
-}
+
 
 include "includes/header.php";
 ?>
@@ -115,7 +102,7 @@ include "includes/header.php";
                 <!-- Descripción del Turno -->
                 <div class="col-md-7">
                     <div class="form-group">
-                        <label for="descripcion_turno">Descripción del Turno</label>
+                        <label for="descripcion_turno">Descripción</label>
                         <textarea class="form-control" id="descripcion_turno" name="descripcion_turno" maxlength="100" placeholder="Agregue una descripción..." rows="2"></textarea>
                     </div>
                 </div>
@@ -135,7 +122,7 @@ include "includes/header.php";
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
-                <th>Descripción Turno</th>
+                <th>Descripción</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -159,7 +146,7 @@ include "includes/header.php";
                             <?php echo $data['status']; ?>
                         )" class="btn btn-success btn-sm"><i class='fas fa-edit'></i></a>
 
-                        <a href="tipo_contrato.php?cambiar_estado=<?php echo $data['id_tipocontrato']; ?>" class="btn btn-warning btn-sm">
+                        <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipocontrato']; ?>)" class="btn btn-warning btn-sm">
                             <i class='fas fa-exchange-alt'></i> Cambiar Estado
                         </a>
                     </td>
@@ -167,6 +154,27 @@ include "includes/header.php";
             <?php } ?>
         </tbody>
     </table>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Acción</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Está seguro de que desea modificar el estado de este tipo contrato?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmBtn">Modificar Estado</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Editar -->
@@ -182,11 +190,11 @@ include "includes/header.php";
                     <input type="hidden" name="accion" value="actualizar">
                     <input type="hidden" id="idEditar" name="id">
                     <div class="form-group">
-                        <label for="nombreEditar">Descripcion</label>
+                        <label for="nombreEditar">Nombre</label>
                         <input type="text" class="form-control" id="nombreEditar" name="nombre" required>
                     </div>
                     <div class="form-group">
-                        <label for="descripcionTurnoEditar">Descripción Turno</label>
+                        <label for="descripcionTurnoEditar">Descripción</label>
                         <textarea class="form-control" id="descripcionTurnoEditar" name="descripcion_turno" maxlength="100" rows="2"></textarea>
                     </div>
                     <div class="form-group">
@@ -207,6 +215,22 @@ include "includes/header.php";
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+
+let tipocontratoId; // Variable global para guardar el ID
+
+function abrirModalConfirmacion(id) {
+    tipocontratoId = id; // Guardar el ID
+    $('#confirmModal').modal('show');
+}
+
+// Evento para el botón de confirmar
+$('#confirmBtn').on('click', function() {
+    // Usamos la variable 'motivoId' que llenamos antes
+    if (tipocontratoId) {
+        // Debes crear este archivo PHP para manejar el cambio de estado
+        window.location.href = `cambiar_estado_tipo_contrato.php?id=${tipocontratoId}`;
+    }
+});
 function limpiar() {
     $('#formulario')[0].reset();
 }

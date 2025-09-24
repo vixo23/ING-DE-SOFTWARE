@@ -34,20 +34,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $turno_id = 1;
 
     // Usamos sentencias preparadas para evitar inyección SQL
-    $query = "INSERT INTO usuarios (rut, digitoRut, nombres, apellido1, apellido2, id_tipocontrato, direccion, comuna, telefono, celular, email, password, username, cargo, status, id_sucursal, id_centrocosto, id_departamento, turnos_id_turnos, fechaCreacion, id_empresa) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO usuarios (rut, digitoRut, nombres, apellido1, apellido2, id_tipocontrato, direccion, comuna, telefono, celular, email, password, username, cargo, status, id_sucursal, id_centrocosto, id_departamento, fechaCreacion, id_empresa) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     if ($stmt = $conexion->prepare($query)) {
         // Vinculamos los parámetros
         // Nota: debes ajustar los campos que faltan (cargo, sucursal, etc.)
         $cargo_placeholder = $_POST['cargo']; // Temporal
 
-        $stmt->bind_param("ssssssssssssssisisisi", 
+        $stmt->bind_param("ssssssssssssssisissi", 
             $rut, $digitoRut, $nombres, $apellido1, 
             $apellido2, $id_tipocontrato, $direccion, 
             $comuna, $telefono, $celular, $correo, $password_hash, $username, 
-            $cargo_placeholder, $status, $id_sucursal, $id_centrocosto, $id_departamento, 
-            $turno_id, $fecha_ingreso, $empresa_id
+            $cargo_placeholder, $status, $id_sucursal, $id_centrocosto, $id_departamento, $fecha_ingreso, $empresa_id
         );
 
         if ($stmt->execute()) {
@@ -78,234 +77,248 @@ $comunas_rm = [
 ];
 ?>
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Registro de Empleado</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
     <style>
-        body { font-family: Arial; }
-        .form-container { max-width: auto; margin: auto; padding: 20px; }
-        form { display: flex; flex-wrap: wrap; gap: 40px; }
-        .form-group { flex: 1 1 1 45%; display: flex; flex-direction: column; }
-        .full-width { flex: 1 1 100%; }
-        input, select { padding: 5px; font-size: 20px; }
-        input[type="submit"] { width:200px ; margin: 20px auto; display:block; padding: 10px; background-color: #4CAF50; color: white; border: none; font-size: 16px; cursor: pointer; }
-        input[type="submit"]:hover { background-color: #45a049; }
-        p.mensaje { color: green; font-weight: bold; text-align: center; }
+        body { background-color: #f8f9fa; }
+        .card { border: none; }
+        .select2-container .select2-selection--single { height: calc(1.5em + .75rem + 2px); }
+
+        /* --- AÑADIDO: REGLA CLAVE PARA OCULTAR LOS PASOS --- */
+        .tab {
+            display: none;
+        }
+        /* Estilo para el feedback de validación en Select2 */
+        .is-invalid + .select2-container .select2-selection--single {
+            border-color: #dc3545;
+        }
     </style>
 </head>
 <body>
 
-<div class="form-container mt-20 ">
-    <h2>Formulario de Registro de Empleado</h2>
-
-    <?php if (isset($mensaje)) echo "<p class='mensaje'>$mensaje</p>"; ?>
-
-    <form method="POST" action="">
-        <!-- Aquí van todos los campos del formulario como los tienes actualmente -->
-        <div class="form-group">
-            <label for="rut">RUT:</label>
-            <input type="text" id="rut" name="rut" required>
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h2 class="mb-0 h4"><i class="fas fa-user-plus mr-2"></i>Formulario de Registro de Empleado</h2>
         </div>
+        <div class="card-body">
+            
+            <?php if (!empty($mensaje)): ?>
+                <div class="alert alert-info"><?php echo $mensaje; ?></div>
+            <?php endif; ?>
 
-        <div class="form-group">
-            <label for="digitoRut">Dígito Verificador:</label>
-            <input type="text" id="digitoRut" name="digitoRut" required>
+            <form method="POST" action="" id="regForm">
+                
+                <div class="progress mb-4">
+                    <div class="progress-bar" role="progressbar" style="width: 33.33%;">Paso 1 de 3</div>
+                </div>
+
+                <div class="tab">
+                    <h5><i class="fas fa-address-card text-primary mr-2"></i>Información Personal</h5>
+                    <hr class="mt-2 mb-4">
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label>RUT:</label>
+                            <input placeholder="12345678" name="rut" class="form-control" required>
+                        </div>
+                        <div class="col-md-1 mb-3">
+                            <label>DV:</label>
+                            <input placeholder="K" name="digitoRut" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Nombres:</label>
+                            <input placeholder="Nombre completo..." name="nombres" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Apellido Paterno:</label>
+                            <input placeholder="Apellido paterno..." name="apellido1" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Apellido Materno:</label>
+                            <input placeholder="Apellido materno..." name="apellido2" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab">
+                    <h5><i class="fas fa-map-marker-alt text-primary mr-2"></i>Datos de Contacto</h5>
+                    <hr class="mt-2 mb-4">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label>Dirección:</label>
+                            <input placeholder="Calle, número, depto..." name="direccion" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Comuna:</label>
+                            <select name="comuna" class="form-control" required>
+                                <option></option>
+                                <?php foreach ($comunas_rm as $comuna) { echo '<option value="' . htmlspecialchars($comuna) . '">' . htmlspecialchars($comuna) . '</option>'; } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Celular:</label>
+                            <input placeholder="+56 9..." name="celular" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Teléfono Fijo (Opcional):</label>
+                            <input name="telefono" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Correo Electrónico:</label>
+                            <input placeholder="ejemplo@correo.com" name="email" class="form-control" type="email" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab">
+                    <h5><i class="fas fa-briefcase text-primary mr-2"></i>Información Laboral</h5>
+                    <hr class="mt-2 mb-4">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label>Empresa:</label>
+                            <select name="id_empresa" class="form-control" required>
+                                <option></option>
+                                <?php mysqli_data_seek($resultado_empresas, 0); while ($fila = mysqli_fetch_assoc($resultado_empresas)) { echo '<option value="' . $fila['id_empresas'] . '">' . htmlspecialchars($fila['nombreFantasia']) . '</option>'; } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Sucursal:</label>
+                            <select name="id_sucursal" class="form-control" required>
+                                <option></option>
+                                <?php mysqli_data_seek($resultado_sucursales, 0); while ($fila = mysqli_fetch_assoc($resultado_sucursales)) { echo '<option value="' . $fila['id_sucursal'] . '">' . htmlspecialchars($fila['nombre']) . '</option>'; } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Departamento:</label>
+                            <select name="id_departamento" class="form-control" required>
+                                <option></option>
+                                <?php mysqli_data_seek($resultado_departamentos, 0); while ($fila = mysqli_fetch_assoc($resultado_departamentos)) { echo '<option value="' . $fila['id_departamento'] . '">' . htmlspecialchars($fila['descripcion']) . '</option>'; } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Centro de Costo:</label>
+                            <select name="id_centrocosto" class="form-control" required>
+                                <option></option>
+                                <?php mysqli_data_seek($resultado_centrocostos, 0); while ($fila = mysqli_fetch_assoc($resultado_centrocostos)) { echo '<option value="' . $fila['id_centro'] . '">' . htmlspecialchars($fila['descripcion']) . '</option>'; } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Cargo:</label>
+                            <input name="cargo" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Tipo de Contrato:</label>
+                            <select name="id_tipocontrato" class="form-control" required>
+                                <option></option>
+                                <?php mysqli_data_seek($resultado_tipocontrato, 0); while ($fila = mysqli_fetch_assoc($resultado_tipocontrato)) { echo '<option value="' . $fila['id_tipocontrato'] . '">' . htmlspecialchars($fila['descripcion']) . '</option>'; } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Fecha de Ingreso:</label>
+                            <input name="fecha_ingreso" class="form-control" type="date" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Estado:</label>
+                            <select name="status" class="form-control" required>
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-right">
+                    <button type="button" class="btn btn-secondary" id="prevBtn" onclick="nextPrev(-1)">Anterior</button>
+                    <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextPrev(1)">Siguiente</button>
+                </div>
+            </form>
         </div>
-
-        <div class="form-group">
-            <label for="nombres">Nombre:</label>
-            <input type="text" id="nombres" name="nombres" required>
-        </div>
-
-        <div class="form-group">
-            <label for="apellido1">Apellido Paterno:</label>
-            <input type="text" id="apellido1" name="apellido1" required>
-        </div>
-
-        <div class="form-group">
-            <label for="apellido2">Apellido Materno:</label>
-            <input type="text" id="apellido2" name="apellido2" required>
-        </div>
-
-        <div class="form-group">
-            <label for="direccion">Dirección:</label>
-            <input type="text" id="direccion" name="direccion" required>
-        </div>
-
-        <div class="form-group">
-            <label for="comuna">Comuna:</label>
-            <select id="comuna" name="comuna" class="form-control" required>
-                <option value="">Seleccione una comuna...</option>
-                <?php
-                // Creamos una opcion por cada comuna en el array
-                foreach ($comunas_rm as $comuna) {
-                    echo '<option value="' . htmlspecialchars($comuna) . '">' . htmlspecialchars($comuna) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="celular">Celular:</label>
-            <input type="text" id="celular" name="celular" required>
-        </div>
-
-        <div class="form-group">
-            <label for="email">Correo Electrónico:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-
-        <div class="form-group">
-            <label for="telefono">Telefono Particular:</label>
-            <input type="text" id="telefono" name="telefono">
-        </div>
-
-        <div class="form-group">
-            <label for="id_empresa">Empresa:</label>
-            <select id="id_empresa" name="id_empresa" class="form-control" required>
-                <option value="">Seleccione una empresa...</option>
-                <?php
-                // Iteramos sobre los resultados de la consulta de empresas
-                while ($fila_empresa = mysqli_fetch_assoc($resultado_empresas)) {
-                    // El 'value' es el ID, y el texto visible es el nombre
-                    echo '<option value="' . $fila_empresa['id_empresas'] . '">' . htmlspecialchars($fila_empresa['nombreFantasia']) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_sucursal">Sucursal:</label>
-            <select id="id_sucursal" name="id_sucursal" class="form-control" required>
-                <option value="">Seleccione una sucursal...</option>
-                <?php
-                // Iteramos sobre los resultados de la consulta de sucursal
-                while ($fila_sucursal = mysqli_fetch_assoc($resultado_sucursales)) {
-                    // El 'value' es el ID, y el texto visible es el nombre
-                    echo '<option value="' . $fila_sucursal['id_sucursal'] . '">' . htmlspecialchars($fila_sucursal['nombre']) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_centrocosto">Centro de Costo:</label>
-            <select id="id_centrocosto" name="id_centrocosto" class="form-control" required>
-                <option value="">Seleccione un centro de costo...</option>
-                <?php
-                // Iteramos sobre los resultados de la consulta de sucursales
-                while ($fila_centrocosto = mysqli_fetch_assoc($resultado_centrocostos)) {
-                    // El 'value' es el ID, y el texto visible es el nombre
-                    echo '<option value="' . $fila_centrocosto['id_centro'] . '">' . htmlspecialchars($fila_centrocosto['descripcion']) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="id_departamento">Departamento:</label>
-            <select id="id_departamento" name="id_departamento" class="form-control" required>
-                <option value="">Seleccione un Departamento...</option>
-                <?php
-                // Iteramos sobre los resultados de la consulta de sucursales
-                while ($fila_departamento = mysqli_fetch_assoc($resultado_departamentos)) {
-                    // El 'value' es el ID, y el texto visible es el nombre
-                    echo '<option value="' . $fila_departamento['id_departamento'] . '">' . htmlspecialchars($fila_departamento['descripcion']) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="cargo">Cargo:</label>
-            <input type="text" id="cargo" name="cargo" required>
-        </div>
-
-        <div class="form-group">
-            <label for="id_tipocontrato">Tipo de Contrato:</label>
-            <select id="id_tipocontrato" name="id_tipocontrato" class="form-control" required>
-                <option value="">Seleccione un Tipo de Contrato...</option>
-                <?php
-                // Iteramos sobre los resultados de la consulta de sucursales
-                while ($fila_tipo_contrato = mysqli_fetch_assoc($resultado_tipocontrato)) {
-                    // El 'value' es el ID, y el texto visible es el nombre
-                    echo '<option value="' . $fila_tipo_contrato['id_tipocontrato'] . '">' . htmlspecialchars($fila_tipo_contrato['descripcion']) . '</option>';
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="fecha_ingreso">Fecha de Ingreso:</label>
-            <input type="date" id="fecha_ingreso" name="fecha_ingreso" required>
-        </div>
-
-        <div class="form-group">
-            <label for="status">Estado:</label>
-            <select id="status" name="status" class="form-control" required>
-                <option value="1">Activo</option>
-                <option value="0">Inactivo</option>
-            </select>
-        </div>
-
-        <div class="form-group full-width">
-            <input type="submit" value="Agregar Empleado">
-        </div>
-
-    </form>
+    </div>
 </div>
 
-</body>
-</html>
-
-
-
-
-
-
-<!-- jQuery y Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-// Variable para guardar el ID del tipo de contrato
-let tipocontratoId;
+var currentTab = 0; 
+showTab(currentTab); 
 
-// Función para abrir el modal de confirmación
-function abrirModalConfirmacion(id) {
-    tipocontratoId = id; // Guardar el ID del garzón
-    $('#confirmModal').modal('show'); // Mostrar el modal
-}
-
-// Función para confirmar el cambio de estado
-$('#confirmBtn').on('click', function() {
-    if (tipocontratoId) {
-        // Redirigir a cambiar_estado.php con el ID del garzón
-        window.location.href = cambiar_estado.php?id=${tipocontratoId};
+function showTab(n) {
+    var x = document.getElementsByClassName("tab");
+    x[n].style.display = "block";
+    document.getElementById("prevBtn").style.display = (n == 0) ? "none" : "inline";
+    if (n == (x.length - 1)) {
+        document.getElementById("nextBtn").innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Empleado';
+    } else {
+        document.getElementById("nextBtn").innerHTML = "Siguiente";
     }
+    var progress = ((n + 1) / x.length) * 100;
+    var progressBar = document.querySelector(".progress-bar");
+    progressBar.style.width = progress + "%";
+    progressBar.innerHTML = "Paso " + (n + 1) + " de " + x.length;
+}
+
+function nextPrev(n) {
+    var x = document.getElementsByClassName("tab");
+    if (n == 1 && !validateForm()) return false;
+    x[currentTab].style.display = "none";
+    currentTab = currentTab + n;
+    if (currentTab >= x.length) {
+        document.getElementById("regForm").submit();
+        return false;
+    }
+    showTab(currentTab);
+}
+
+function validateForm() {
+    var tab, inputs, selects, i, valid = true;
+    tab = document.getElementsByClassName("tab")[currentTab];
+    inputs = tab.getElementsByTagName("input");
+    selects = tab.getElementsByTagName("select");
+
+    for (i = 0; i < inputs.length; i++) {
+        if (inputs[i].hasAttribute("required") && inputs[i].value.trim() === "") {
+            inputs[i].classList.add("is-invalid");
+            valid = false;
+        } else {
+            inputs[i].classList.remove("is-invalid");
+        }
+    }
+    
+    for (i = 0; i < selects.length; i++) {
+        if (selects[i].hasAttribute("required") && selects[i].value === "") {
+            selects[i].classList.add("is-invalid");
+            valid = false;
+        } else {
+            selects[i].classList.remove("is-invalid");
+        }
+    }
+    return valid;
+}
+
+$(document).ready(function() {
+    $('#regForm select').select2({
+        theme: 'bootstrap4',
+        placeholder: 'Seleccione una opción',
+        allowClear: true
+    }).on('change', function() {
+        // Remueve la clase de error de Select2 cuando se selecciona algo
+        $(this).removeClass('is-invalid');
+    });
 });
-
-// Función para abrir el modal de edición
-function editartipocontrato(id, nombre, estado) {
-    // Rellenar el formulario de edición
-    $('#idEditar').val(id);
-    $('#nombreEditar').val(nombre);
-    $('#editarModal').modal('show'); // Mostrar el modal de edición
-}
-
-// Función para limpiar el formulario
-function limpiar() {
-    $('#formulario')[0].reset(); // Restablecer el formulario
-}
-
-// Función para mostrar alerta
-function mostrarAlerta(mensaje) {
-    $('#alertMessage').text(mensaje); // Rellenar el mensaje de alerta
-    $('#alertModal').modal('show'); // Mostrar el modal de alerta
-}
 </script>
 
 <?php include_once "includes/footer.php"; ?>
+</body>
+</html>
+

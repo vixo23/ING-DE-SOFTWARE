@@ -38,20 +38,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['esta
     }
 }
 
-// Función para obtener todos los tipos de vacaciones
-function getTiposVacaciones($conexion, $id_empresa) {
-    $html = '';
-    $query = mysqli_query($conexion, "SELECT * FROM tipo_vacaciones WHERE id_empresas='$id_empresa' ORDER BY descripcion");
-    while ($data = mysqli_fetch_assoc($query)) {
-        $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
-        $html .= "<tr>
-                    <td>{$data['id_tipovacacion']}</td>
-                    <td>{$data['descripcion']}</td>
-                    <td>{$estado}</td>
-                  </tr>";
-    }
-    return $html;
-}
 ?>
 
 <div class="container mt-4">
@@ -75,69 +61,78 @@ function getTiposVacaciones($conexion, $id_empresa) {
     </form>
 </div>
 
-<!-- Modal para mostrar todos los tipos de vacaciones -->
-<div class="modal fade" id="modalTiposVacaciones" tabindex="-1" role="dialog" aria-labelledby="modalTiposVacacionesLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalTiposVacacionesLabel">Tipos de Vacaciones</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <table class="table table-bordered table-striped" id="tablaTipos">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php echo getTiposVacaciones($conexion, $id_empresa); ?>
-            </tbody>
-        </table>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-      </div>
-    </div>
-  </div>
+<div class="table-responsive">
+    <table class="table table-hover table-striped table-bordered mt-2" id="tbl">
+        <thead class="thead-dark">
+            <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $query = mysqli_query($conexion, "SELECT * FROM tipo_vacaciones WHERE id_empresas='$id_empresa' ORDER BY descripcion");
+            $result = mysqli_num_rows($query);
+            if ($result > 0) {
+                while ($data = mysqli_fetch_assoc($query)) {
+                    $estado = ($data['status'] == 1) ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
+                    ?>
+                    <tr>
+                        <td><?php echo $data['id_tipovacacion']; ?></td>
+                        <td><?php echo $data['descripcion']; ?></td>
+                        <td><?php echo $estado; ?></td>
+                        <td>
+                            <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_tipovacacion']; ?>)" class="btn btn-warning">
+                                <i class='fas fa-exchange-alt'></i> Cambiar Estado
+                            </a>
+                        </td>
+                    </tr>
+            <?php }
+            } ?>
+        </tbody>
+    </table>
 </div>
-
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Acción</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Está seguro de que desea modificar el estado de este tipo de vacacion?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmBtn">Modificar Estado</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
-$(document).ready(function(){
+// Variable para guardar el ID del tipo de contrato
+let tipovacacionId;
 
-    // Interceptar el envío del formulario
-    $('#formulario').submit(function(e){
-        e.preventDefault(); // Evitar recarga
+// Función para abrir el modal de confirmación
+function abrirModalConfirmacion(id) {
+    tipovacacionId = id; // Guardar el ID del garzón
+    $('#confirmModal').modal('show'); // Mostrar el modal
+}
 
-        $.ajax({
-            type: 'POST',
-            url: '', // mismo archivo
-            data: $(this).serialize(),
-            success: function(){
-                // Limpiar formulario
-                $('#formulario')[0].reset();
-
-                // Recargar tabla dentro del modal
-                $.ajax({
-                    url: 'tipo_vacaciones.php',
-                    type: 'GET',
-                    data: {ajax: 1},
-                    success: function(data){
-                        var html = $(data).find('#tablaTipos tbody').html();
-                        $('#tablaTipos tbody').html(html);
-                    }
-                });
-            }
-        });
-    });
-
+// Función para confirmar el cambio de estado
+$('#confirmBtn').on('click', function() {
+    if (tipovacacionId) {
+        // Redirigir a cambiar_estado.php con el ID del garzón
+        window.location.href = `cambiar_estado_tipo_vacaciones.php?id=${tipovacacionId}`;
+    }
 });
 </script>
 

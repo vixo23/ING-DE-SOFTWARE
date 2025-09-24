@@ -215,7 +215,7 @@ $id_empresa=$_SESSION['idempresa'];
                             </a>
                         </li>
 						<li class="nav-item">
-                            <a href="informa_asistencia.php" class="nav-link">
+                            <a href="informe_de_asistencia.php" class="nav-link">
                                 <i class="nav-icon fas fa-coffee"></i><p>Informe de Asistencia</p>
                             </a>
                         </li>
