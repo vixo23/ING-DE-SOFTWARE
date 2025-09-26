@@ -99,7 +99,7 @@ $id_empresa=$_SESSION['idempresa'];
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="dashboard.php" class="brand-link">
-                <img src="../assets/img/logo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+                <img src="../assets/img/logo.png" alt="AdminLTE Logo" class="brand-image" >
                 <span class="brand-text font-weight-light">Eugcom - TicTac</span>
             </a>
 
@@ -162,6 +162,12 @@ $id_empresa=$_SESSION['idempresa'];
                                         <p>Nombre Turnos</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="permisos.php" class="nav-link">
+                                        <i class="nav-icon fas fa-receipt"></i>
+                                        <p>Permisos</p>
+                                    </a>
+                                </li>
 								<li class="nav-item">
                                     <a href="sucursal.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
@@ -209,8 +215,13 @@ $id_empresa=$_SESSION['idempresa'];
                                 </li>
                             </ul>
                         </li>
+                        <li class="nav-item">
+                            <a href="vacaciones.php" class="nav-link">
+                                <i class="nav-icon fas fa-coffee"></i><p>Vacaciones</p>
+                            </a>
+                        </li>
 						<li class="nav-item">
-                            <a href="informa_asistencia.php" class="nav-link">
+                            <a href="informe_de_asistencia.php" class="nav-link">
                                 <i class="nav-icon fas fa-coffee"></i><p>Informe de Asistencia</p>
                             </a>
                         </li>
