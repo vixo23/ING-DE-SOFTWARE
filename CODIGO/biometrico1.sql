@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-09-2025 a las 03:13:10
+-- Tiempo de generación: 29-09-2025 a las 02:37:25
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -221,7 +221,8 @@ CREATE TABLE `permisos` (
 
 INSERT INTO `permisos` (`id_permisos`, `id_usuario`, `id_motivo`, `fecha_ini`, `fecha_fin`, `hora_ini`, `hora_fin`, `total_horas`, `observaciones`, `goce`, `status`, `adjunto`, `creado`, `id_empresa`) VALUES
 (1, 1, 2, '2025-09-03', '2025-09-11', '09:00', '18:30', '63', 'Vacaciones', 1, 2, 'https://biometricocloud.cl/sitioreloj/uploads/', '2018-09-10', 1),
-(3, 1, 1, '2025-09-24', '2025-09-25', NULL, NULL, '2', 'MEDICO', 1, 1, NULL, '2025-09-23 21:28:37', 1);
+(3, 1, 1, '2025-09-24', '2025-09-25', NULL, NULL, '2', 'MEDICO', 1, 1, NULL, '2025-09-23 21:28:37', 1),
+(4, 2, 1, '2025-09-23', '2025-09-24', NULL, NULL, '5', 'Le duele la panza', 1, 1, NULL, '2025-09-23 22:46:09', 1);
 
 -- --------------------------------------------------------
 
@@ -409,7 +410,7 @@ CREATE TABLE `vacaciones` (
 --
 
 INSERT INTO `vacaciones` (`id_vacaciones`, `id_tipovacacion`, `anio`, `fecha_inicio`, `fecha_termino`, `dias`, `periodo`, `dia_usado`, `dia_restante`, `id_usuario`, `aprobacion`, `status`, `id_autoriza`) VALUES
-(2, 1, 2004, '2025-09-02', '2025-09-10', 20, 2, 10, 10, 1, 2, 1, 1);
+(2, 1, 2004, '2025-09-02', '2025-09-10', 19, 2, 10, 10, 1, 2, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -585,7 +586,7 @@ ALTER TABLE `motivos_permisos`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `id_permisos` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_permisos` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `sucursal`
@@ -621,7 +622,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `vacaciones`
 --
 ALTER TABLE `vacaciones`
-  MODIFY `id_vacaciones` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_vacaciones` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Restricciones para tablas volcadas
