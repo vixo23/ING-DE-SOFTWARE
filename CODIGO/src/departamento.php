@@ -2,20 +2,17 @@
 session_start();
 include "../conexion.php";
 
-$id_empresa=$_SESSION['idempresa'];
+$id_empresa = $_SESSION['idempresa'];
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['estado'])) {
+// ==========================
+// 1️⃣ REGISTRAR NUEVO DEPARTAMENTO
+// ==========================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['estado']) && !isset($_POST['idEditar'])) {
     $descripcion = mysqli_real_escape_string($conexion, trim($_POST['nombre']));
     $estado = (int)$_POST['estado'];
-    
-    // --- NUEVA LÍNEA ---
-    // Obtenemos la fecha y hora actual
-    $fechaCreacion = date('Y-m-d'); 
+    $fechaCreacion = date('Y-m-d');
 
-    // Validar que no esté vacío
     if (!empty($descripcion)) {
-        // --- CONSULTA MODIFICADA ---
-        // Añadimos la columna 'fechaCreacion' y su valor '$fechaCreacion'
         $query_insert = mysqli_query($conexion, "INSERT INTO departamentos (descripcion, status, id_empresas, fechaCreacion) VALUES ('$descripcion', $estado, $id_empresa, '$fechaCreacion')");
 
         if ($query_insert) {
@@ -37,6 +34,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['esta
         exit;
     }
 }
+
+// ==========================
+// 2️⃣ ACTUALIZAR DEPARTAMENTO (AJAX)
+// ==========================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['idEditar'], $_POST['nombreEditar'])) {
+    $idEditar = (int)$_POST['idEditar'];
+    $nombreEditar = mysqli_real_escape_string($conexion, trim($_POST['nombreEditar']));
+
+    if (!empty($nombreEditar) && $idEditar > 0) {
+        $query_update = mysqli_query($conexion, "UPDATE departamentos SET descripcion='$nombreEditar' WHERE id_departamento=$idEditar AND id_empresas='$id_empresa'");
+        if ($query_update) {
+            echo json_encode(["status" => "success", "message" => "Departamento actualizado correctamente."]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error al actualizar el departamento."]);
+        }
+    } else {
+        echo json_encode(["status" => "error", "message" => "Datos inválidos."]);
+    }
+    exit;
+}
+
 include "includes/header.php";
 ?>
 
@@ -56,8 +74,8 @@ include "includes/header.php";
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="nombre">Descripcion</label>
-                        <input type="text" class="form-control" placeholder="Ingrese Descripcion de departamento" name="nombre" id="nombre" required>
+                        <label for="nombre">Descripción</label>
+                        <input type="text" class="form-control" placeholder="Ingrese descripción del departamento" name="nombre" id="nombre" required>
                         <input type="hidden" id="id" name="id">
                     </div>
                 </div>
@@ -84,7 +102,8 @@ include "includes/header.php";
             <tr>
                 <th>#</th>
                 <th>Nombre</th>
-                <th>Fecha de Creación</th> <th>Estado</th>
+                <th>Fecha de Creación</th>
+                <th>Estado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -99,9 +118,10 @@ include "includes/header.php";
                     <tr>
                         <td><?php echo $data['id_departamento']; ?></td>
                         <td><?php echo $data['descripcion']; ?></td>
-                        <td><?php echo $data['fechaCreacion']; ?></td> <td><?php echo $estado; ?></td>
+                        <td><?php echo $data['fechaCreacion']; ?></td>
+                        <td><?php echo $estado; ?></td>
                         <td>
-                            <a href="#" onclick="editardepartamento(<?php echo $data['id_departamento']; ?>, '<?php echo $data['descripcion']; ?>', <?php echo $data['status']; ?>)" class="btn btn-success">
+                            <a href="#" onclick="editardepartamento(<?php echo $data['id_departamento']; ?>, '<?php echo $data['descripcion']; ?>')" class="btn btn-success">
                                 <i class='fas fa-edit'></i>
                             </a>
                             <a href="#" onclick="abrirModalConfirmacion(<?php echo $data['id_departamento']; ?>)" class="btn btn-warning">
@@ -115,6 +135,7 @@ include "includes/header.php";
     </table>
 </div>
 
+<!-- Modal Confirmación -->
 <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -135,6 +156,7 @@ include "includes/header.php";
     </div>
 </div>
 
+<!-- Modal Editar -->
 <div class="modal fade" id="editarModal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -145,19 +167,20 @@ include "includes/header.php";
                 </button>
             </div>
             <div class="modal-body">
-                <form action="actualizar_departamento.php" method="post" id="formEditar">
-                    <input type="hidden" id="idEditar" name="id">
+                <form id="formEditar">
+                    <input type="hidden" id="idEditar" name="idEditar">
                     <div class="form-group">
-                        <label for="nombreEditar">Descripcion</label>
-                        <input type="text" class="form-control" id="nombreEditar" name="nombre" required>
+                        <label for="nombreEditar">Descripción</label>
+                        <input type="text" class="form-control" id="nombreEditar" name="nombreEditar" required>
                     </div>
-                    <input type="submit" value="Actualizar" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal Alerta -->
 <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -177,45 +200,64 @@ include "includes/header.php";
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 <script>
 // Variable para guardar el ID del departamento
 let departamentoId;
 
-// Funcion para abrir el modal de confirmacion
+// Abrir modal de confirmación
 function abrirModalConfirmacion(id) {
-    departamentoId = id; // Guardar el ID
-    $('#confirmModal').modal('show'); // Mostrar el modal
+    departamentoId = id;
+    $('#confirmModal').modal('show');
 }
 
-// Funcion para confirmar el cambio de estado
+// Confirmar cambio de estado (redirige por ahora)
 $('#confirmBtn').on('click', function() {
     if (departamentoId) {
         window.location.href = `cambiar_estado_departamento.php?id=${departamentoId}`;
     }
 });
 
-// Funcion para abrir el modal de edicion
-function editardepartamento(id, nombre, estado) {
-    // Rellenar el formulario de edicion
+// Abrir modal de edición
+function editardepartamento(id, nombre) {
     $('#idEditar').val(id);
     $('#nombreEditar').val(nombre);
-    $('#editarModal').modal('show'); // Mostrar el modal de edicion
+    $('#editarModal').modal('show');
 }
 
-// Funcion para limpiar el formulario
+// Limpiar formulario
 function limpiar() {
-    $('#formulario')[0].reset(); // Restablecer el formulario
+    $('#formulario')[0].reset();
 }
 
-// Funcion para mostrar alerta
+// Mostrar alerta
 function mostrarAlerta(mensaje) {
-    $('#alertMessage').text(mensaje); // Rellenar el mensaje de alerta
-    $('#alertModal').modal('show'); // Mostrar el modal de alerta
+    $('#alertMessage').text(mensaje);
+    $('#alertModal').modal('show');
 }
+
+// Enviar formulario de edición por AJAX
+$('#formEditar').on('submit', function(e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: '', // mismo archivo PHP
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                $('#editarModal').modal('hide');
+                mostrarAlerta(response.message);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                mostrarAlerta(response.message);
+            }
+        },
+        error: function() {
+            mostrarAlerta('Error de comunicación con el servidor.');
+        }
+    });
+});
 </script>
 
 <?php include_once "includes/footer.php"; ?>
