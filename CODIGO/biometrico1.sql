@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-09-2025 a las 02:37:25
+-- Tiempo de generación: 09-10-2025 a las 22:17:34
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -43,7 +43,8 @@ INSERT INTO `centro_costo` (`id_centro`, `fechaCreacion`, `descripcion`, `status
 (1, '2025-09-10', 'CO222', 1, 1),
 (2, '2025-09-18', 'PRUEBAAA', 1, 1),
 (3, '2025-09-13', 'prueba2', 1, 1),
-(4, '2025-09-13', 'prueba1', 1, 1);
+(4, '2025-09-13', 'prueba1', 1, 1),
+(5, '2025-10-08', 'centro de costo demo', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -67,7 +68,8 @@ INSERT INTO `departamentos` (`id_departamento`, `fechaCreacion`, `descripcion`, 
 (1, '2025-09-11', 'contabilidad', 1, 1),
 (2, '2025-09-10', 'recursos humanos', 1, 1),
 (3, '2025-09-10', 'cobranza', 1, 1),
-(4, '2025-09-11', 'centro de finanzas', 1, 1);
+(4, '2025-09-11', 'centro de finanzas', 1, 1),
+(20, '2025-10-08', 'prueba111', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -221,8 +223,7 @@ CREATE TABLE `permisos` (
 
 INSERT INTO `permisos` (`id_permisos`, `id_usuario`, `id_motivo`, `fecha_ini`, `fecha_fin`, `hora_ini`, `hora_fin`, `total_horas`, `observaciones`, `goce`, `status`, `adjunto`, `creado`, `id_empresa`) VALUES
 (1, 1, 2, '2025-09-03', '2025-09-11', '09:00', '18:30', '63', 'Vacaciones', 1, 2, 'https://biometricocloud.cl/sitioreloj/uploads/', '2018-09-10', 1),
-(3, 1, 1, '2025-09-24', '2025-09-25', NULL, NULL, '2', 'MEDICO', 1, 1, NULL, '2025-09-23 21:28:37', 1),
-(4, 2, 1, '2025-09-23', '2025-09-24', NULL, NULL, '5', 'Le duele la panza', 1, 1, NULL, '2025-09-23 22:46:09', 1);
+(3, 1, 1, '2025-09-24', '2025-09-25', NULL, NULL, '2', 'MEDICO', 1, 1, NULL, '2025-09-23 21:28:37', 1);
 
 -- --------------------------------------------------------
 
@@ -362,7 +363,7 @@ CREATE TABLE `usuarios` (
   `turnos_id_turnos` int(10) DEFAULT NULL,
   `username` varchar(250) NOT NULL,
   `password` int(250) NOT NULL,
-  `cargo` int(100) NOT NULL,
+  `cargo` varchar(100) NOT NULL,
   `salt` varchar(450) DEFAULT NULL,
   `status` tinyint(5) NOT NULL,
   `id_sucursal` int(10) DEFAULT NULL,
@@ -377,11 +378,11 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuarios`, `rut`, `digitoRut`, `codigoDedo`, `nombres`, `apellido1`, `apellido2`, `id_tipocontrato`, `direccion`, `comuna`, `ciudad`, `pais`, `telefono`, `celular`, `email`, `turnos_id_turnos`, `username`, `password`, `cargo`, `salt`, `status`, `id_sucursal`, `id_departamento`, `id_centrocosto`, `fechaCreacion`, `id_empresa`) VALUES
-(1, '13926052', '2', NULL, 'DANIEL', 'RODRIGUEZ', 'VALDES', 1, 'NULL', 'NULL', 'NULL', NULL, NULL, '99999999', 'CORREO@PRUEBA.COM', 1, 'USERNAME', 121212, 0, '60f1b72bf315b991f862d2a7345cbb14998c818b048ff196c217cad30e5f3cfd182da791cd2e9062c53d57587412dad61a9bc3b3713b9c5a6b5ae2e180be6ad6', 1, 1, 1, 1, '2025-09-11', 1),
-(2, '533523523', '3', NULL, 'diego', 'jere', 'klintom', 1, 'bella 21', 'maipu', NULL, NULL, NULL, '', 'perez@prueba.com', 4, 'asdasd', 1111, 1, NULL, 1, 1, 1, 1, '2025-09-25', 1),
-(20, '11111111', '2', NULL, 'pedro', 'perez', 'perez', 1, 'valle 1212', 'Cerro Navia', NULL, NULL, '222222', '99999933', 'perez@pedro.com', 1, '11111111', 1234, 1, NULL, 1, 1, 1, 1, '2025-09-23', 1),
-(21, '12345678', 'k', NULL, 'addan ignacio', 'saez', 'rodriguez', 1, 'SANTIAGO 1500', 'Maipú', NULL, NULL, '', '+569 47478989', 'prueba@correo.com', NULL, '12345678', 1234, 1, NULL, 1, 1, 2, 1, '2025-09-25', 2),
-(22, '22211380', '2', NULL, 'felipe', 'soto', 'soto', 1, 'los pintos 22', 'Cerrillos', NULL, NULL, '', '92848218542', 'prueba@correo.com', 6, '22211380', 1234, 1, NULL, 1, 1, 4, 1, '2025-09-24', 1);
+(1, '13926052', '2', NULL, 'DANIEL', 'RODRIGUEZ', 'VALDES', 1, 'NULL', 'NULL', 'NULL', NULL, NULL, '99999999', 'CORREO@PRUEBA.COM', 1, 'USERNAME', 121212, '0', '60f1b72bf315b991f862d2a7345cbb14998c818b048ff196c217cad30e5f3cfd182da791cd2e9062c53d57587412dad61a9bc3b3713b9c5a6b5ae2e180be6ad6', 1, 1, 1, 1, '2025-09-11', 1),
+(2, '533523523', '3', NULL, 'diego', 'jere', 'klintom', 1, 'bella 21', 'maipu', NULL, NULL, NULL, '', 'perez@prueba.com', 4, 'asdasd', 1111, '1', NULL, 1, 1, 1, 1, '2025-09-25', 1),
+(20, '11111111', '2', NULL, 'pedro', 'perez', 'perez', 1, 'valle 1212', 'Cerro Navia', NULL, NULL, '222222', '99999933', 'perez@pedro.com', 1, '11111111', 1234, '1', NULL, 1, 1, 1, 1, '2025-09-23', 1),
+(21, '12345678', 'k', NULL, 'addan ignacio', 'saez', 'rodriguez', 1, 'SANTIAGO 1500', 'Maipú', NULL, NULL, '', '+569 47478989', 'prueba@correo.com', NULL, '12345678', 1234, '1', NULL, 1, 1, 2, 1, '2025-09-25', 2),
+(22, '22211380', '2', NULL, 'felipe', 'soto', 'soto', 1, 'los pintos 22', 'Cerrillos', NULL, NULL, '', '92848218542', 'prueba@correo.com', 6, '22211380', 1234, '1', NULL, 1, 1, 4, 1, '2025-09-24', 1);
 
 -- --------------------------------------------------------
 
@@ -410,7 +411,7 @@ CREATE TABLE `vacaciones` (
 --
 
 INSERT INTO `vacaciones` (`id_vacaciones`, `id_tipovacacion`, `anio`, `fecha_inicio`, `fecha_termino`, `dias`, `periodo`, `dia_usado`, `dia_restante`, `id_usuario`, `aprobacion`, `status`, `id_autoriza`) VALUES
-(2, 1, 2004, '2025-09-02', '2025-09-10', 19, 2, 10, 10, 1, 2, 1, 1);
+(2, 1, 2004, '2025-09-02', '2025-09-10', 20, 2, 10, 10, 1, 2, 1, 1);
 
 --
 -- Índices para tablas volcadas
@@ -544,13 +545,13 @@ ALTER TABLE `vacaciones`
 -- AUTO_INCREMENT de la tabla `centro_costo`
 --
 ALTER TABLE `centro_costo`
-  MODIFY `id_centro` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_centro` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `departamentos`
 --
 ALTER TABLE `departamentos`
-  MODIFY `id_departamento` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id_departamento` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `dispositivo`
@@ -586,7 +587,7 @@ ALTER TABLE `motivos_permisos`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `id_permisos` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_permisos` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `sucursal`
@@ -622,7 +623,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `vacaciones`
 --
 ALTER TABLE `vacaciones`
-  MODIFY `id_vacaciones` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_vacaciones` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Restricciones para tablas volcadas
