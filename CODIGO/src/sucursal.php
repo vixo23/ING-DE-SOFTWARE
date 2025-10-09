@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion']) && $_POST['a
 
     if (!empty($nombre) && !empty($direccion) && !empty($comuna) && !empty($tipo)) {
         // CORRECCIÓN: Usar el nombre de columna correcto 'statusSucursal'
-        $query_insert = mysqli_query($conexion, "INSERT INTO sucursal (nombre, direccion, comuna, statusSucursal, empresas_id_empresas, tipo) 
+        $query_insert = mysqli_query($conexion, "INSERT INTO sucursal (nombre, direccion, comuna, status, empresas_id_empresas, tipo) 
                                                   VALUES ('$nombre', '$direccion', '$comuna', $estado, $id_empresa, '$tipo')");
 
         if ($query_insert) {
