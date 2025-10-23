@@ -11,18 +11,15 @@ include "../conexion.php";
 $id_empresa = $_SESSION['idempresa'];
 $mensaje_exportacion = '';
 
-// --- 1. LÓGICA PARA EXPORTAR A CSV ---
-// Esto se ejecuta primero porque necesita enviar cabeceras HTTP y luego terminar la ejecución.
+// --- 1. LÓGICA PARA EXPORTAR A CSV (POST) ---
 if (isset($_POST['exportar_csv']) && !empty($_POST['marcas']) && !empty($_POST['nombre_archivo'])) {
     $marcas_seleccionadas = $_POST['marcas'];
     $nombre_archivo = $_POST['nombre_archivo'];
 
-    // Asegurar que el nombre del archivo termine en .csv
     if (substr($nombre_archivo, -4) !== ".csv") {
         $nombre_archivo .= ".csv";
     }
 
-    // Preparar la consulta para exportar solo las marcas seleccionadas
     $placeholders = implode(',', array_fill(0, count($marcas_seleccionadas), '?'));
     $sql_export = "SELECT m.fecha, m.hora, u.rut, u.nombres, u.apellido1, u.apellido2
                    FROM marcas m
@@ -36,45 +33,81 @@ if (isset($_POST['exportar_csv']) && !empty($_POST['marcas']) && !empty($_POST['
     $stmt_export->execute();
     $resultado_export = $stmt_export->get_result();
 
-    // Enviar cabeceras para forzar la descarga del archivo
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
 
     $output = fopen('php://output', 'w');
-    // Escribir la fila de encabezados
     fputcsv($output, ['Fecha', 'Hora', 'RUT', 'Nombre', 'Apellido Paterno', 'Apellido Materno']);
 
-    // Escribir los datos de las marcas
     while ($fila = $resultado_export->fetch_assoc()) {
         fputcsv($output, $fila);
     }
     
     fclose($output);
     $stmt_export->close();
-    exit(); // Terminar el script después de la descarga
+    exit();
 }
 
-// --- 2. LÓGICA PARA EL FILTRADO DE LA VISTA PRINCIPAL ---
+// --- 2. LÓGICA PARA EL FILTRADO DE LA VISTA PRINCIPAL (GET) ---
 include "includes/header.php";
 
-$fecha_desde = $_GET['fecha_desde'] ?? date('Y-m-01');
-$fecha_hasta = $_GET['fecha_hasta'] ?? date('Y-m-d');
-$nombre_usuario = $_GET['nombre_usuario'] ?? '';
+// Detectar acción e impresión automática
+$action = $_GET['action'] ?? '';
+$print  = isset($_GET['print']) ? $_GET['print'] : '';
 
+// Fechas para consulta
+if ($action === 'informe_diario') {
+    // Forzar día actual
+    $fecha_desde = date('Y-m-d');
+    $fecha_hasta = date('Y-m-d');
+    $nombre_usuario = $_GET['nombre_usuario'] ?? '';
+} else {
+    $fecha_desde = $_GET['fecha_desde'] ?? date('Y-m-01');
+    $fecha_hasta = $_GET['fecha_hasta'] ?? date('Y-m-d');
+    $nombre_usuario = $_GET['nombre_usuario'] ?? '';
+}
+
+// ===== NUEVO: construir leyenda de día + fecha (solo para informe diario) =====
+$legibleHoy = '';
+if ($action === 'informe_diario') {
+    $tz = new DateTimeZone('America/Santiago');
+    $hoyDT = new DateTime('now', $tz);
+    if (class_exists('IntlDateFormatter')) {
+        $fmt = new IntlDateFormatter(
+            'es_CL',
+            IntlDateFormatter::FULL,
+            IntlDateFormatter::NONE,
+            'America/Santiago',
+            IntlDateFormatter::GREGORIAN,
+            "EEEE d 'de' MMMM 'de' y"
+        );
+        $legibleHoy = ucfirst($fmt->format($hoyDT));
+    } else {
+        // Fallback sin intl
+        $dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+        $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $d = (int)$hoyDT->format('w');
+        $dia = $dias[$d];
+        $dd = (int)$hoyDT->format('d');
+        $mm = (int)$hoyDT->format('m');
+        $yyyy = $hoyDT->format('Y');
+        $legibleHoy = ucfirst("$dia $dd de {$meses[$mm-1]} de $yyyy");
+    }
+}
+
+// Armado de consulta con prepared statements
 $condiciones = ["u.id_empresa = ?"];
 $tipos_params = "i";
 $params = [$id_empresa];
 
-if (!empty($fecha_desde)) {
-    $condiciones[] = "m.fecha >= ?";
-    $tipos_params .= "s";
-    $params[] = $fecha_desde;
-}
-if (!empty($fecha_hasta)) {
-    $condiciones[] = "m.fecha <= ?";
-    $tipos_params .= "s";
-    $params[] = $fecha_hasta;
-}
+// Si quieres blindarlo 100% como "solo hoy" del lado servidor cuando es informe_diario, descomenta:
+// if ($action === 'informe_diario') {
+//     $condiciones[] = "m.fecha = CURDATE()";
+// } else {
+    if (!empty($fecha_desde)) { $condiciones[] = "m.fecha >= ?"; $tipos_params .= "s"; $params[] = $fecha_desde; }
+    if (!empty($fecha_hasta)) { $condiciones[] = "m.fecha <= ?"; $tipos_params .= "s"; $params[] = $fecha_hasta; }
+// }
+
 if (!empty($nombre_usuario)) {
     $condiciones[] = "u.nombres LIKE ?";
     $tipos_params .= "s";
@@ -93,6 +126,9 @@ $stmt = $conexion->prepare($sql);
 $stmt->bind_param($tipos_params, ...$params);
 $stmt->execute();
 $query_asistencia = $stmt->get_result();
+
+// bandera para JS (auto imprimir al recargar)
+$AUTO_PRINT_TODAY = ($action === 'informe_diario' && $print === '1');
 ?>
 
 <!-- Formulario de Filtros -->
@@ -101,7 +137,7 @@ $query_asistencia = $stmt->get_result();
         <h4 class="mb-0"><i class="fas fa-filter mr-2 text-primary"></i>Informe de Asistencia</h4>
     </div>
     <div class="card-body">
-        <form action="" method="get">
+        <form action="" method="get" id="formFiltros">
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -121,11 +157,24 @@ $query_asistencia = $stmt->get_result();
                         <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" value="<?= htmlspecialchars($fecha_hasta); ?>">
                     </div>
                 </div>
-                <div class="col-md-2 align-self-end">
-                    <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                <div class="col-md-2 align-self-end d-flex">
+                    <button type="submit" class="btn btn-primary btn-block mr-2">Filtrar</button>
+                    <!-- NUEVO: botón Informe Diario (usa GET action=informe_diario & print=1) -->
+                    <button type="button" class="btn btn-success btn-block" id="btnInformeDiario">Informe Diario</button>
+                    <input type="hidden" name="action" id="actionFiltro" value="">
+                    <!-- NUEVO: bandera para disparar impresión tras recargar -->
+                    <input type="hidden" name="print" id="printFlag" value="">
                 </div>
             </div>
         </form>
+
+        <!-- NUEVO: cintillo con día + fecha actual cuando es Informe Diario -->
+        <?php if ($action === 'informe_diario' && $legibleHoy): ?>
+            <div class="alert alert-info d-flex align-items-center mt-3 mb-0" role="alert">
+                <i class="fas fa-calendar-day mr-2"></i>
+                <div><strong>Informe de asistencia diario</strong> — <?= htmlspecialchars($legibleHoy) ?></div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -193,31 +242,107 @@ $query_asistencia = $stmt->get_result();
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.css"/>
 
 <script>
+    // bandera server->cliente para auto imprimir
+    const AUTO_PRINT_TODAY = <?= $AUTO_PRINT_TODAY ? 'true' : 'false' ?>;
+
     $(document).ready(function() {
         // Inicializar DataTables
-        $('#tabla_asistencia').DataTable({
+        const dt = $('#tabla_asistencia').DataTable({
             "language": {"url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"},
             "pageLength": 10,
             "lengthChange": true,
             "ordering": true,
-            "columnDefs": [{ "orderable": false, "targets": 0 }] // Deshabilitar orden en la columna de checkboxes
+            "columnDefs": [{ "orderable": false, "targets": 0 }]
         });
 
-        // Lógica para el checkbox "Seleccionar Todo"
+        // Seleccionar Todo
         $('#seleccionarTodos').on('change', function(e) {
             $('.selectRow').prop('checked', e.target.checked);
         });
+
+        // Informe Diario -> pone hoy en fechas, setea action+print y envía
+        $('#btnInformeDiario').on('click', function() {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            const hoyStr = `${yyyy}-${mm}-${dd}`;
+
+            $('#fecha_desde').val(hoyStr);
+            $('#fecha_hasta').val(hoyStr);
+            $('#actionFiltro').val('informe_diario');
+            $('#printFlag').val('1'); // hará que al recargar se dispare la impresión
+            $('#formFiltros').trigger('submit');
+        });
+
+        // Si venimos de Informe Diario con print=1, auto imprimir HOY
+        if (AUTO_PRINT_TODAY) {
+            setTimeout(imprimirHoy, 250);
+        }
     });
 
+    // === Imprime SOLO filas con la fecha de HOY (todas las páginas de DT) con día + fecha en título ===
+    function imprimirHoy() {
+        const dt = $('#tabla_asistencia').DataTable();
+
+        // Hoy en formato dd-mm-YYYY como se muestra en la tabla
+        const hoy = new Date();
+        const dd  = String(hoy.getDate()).padStart(2, '0');
+        const mm  = String(hoy.getMonth() + 1).padStart(2, '0');
+        const yyyy = hoy.getFullYear();
+        const hoyTabla = `${dd}-${mm}-${yyyy}`;
+
+        // Nombre del día para el título
+        const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+        const dayName = dias[hoy.getDay()];
+        const tituloDia = `${dayName} ${hoyTabla}`;
+
+        const nodes = dt.rows({ page: 'all' }).nodes(); // todas las páginas
+
+        // 0 checkbox, 1 ID, 2 Nombre, 3 Fecha, 4 Hora
+        const filasHoy = Array.from(nodes).filter(tr => {
+            const tds = tr.querySelectorAll('td');
+            return tds && tds.length >= 5 && tds[3].textContent.trim() === hoyTabla;
+        });
+
+        if (filasHoy.length === 0) {
+            alert('No hay marcas del día de hoy para imprimir.');
+            return;
+        }
+
+        const thead = $('#tabla_asistencia thead').clone();
+        thead.find('th:first').remove();
+
+        let cuerpo = '<tbody>';
+        filasHoy.forEach(tr => {
+            const clon = tr.cloneNode(true);
+            clon.deleteCell(0); // quitar checkbox
+            cuerpo += clon.outerHTML;
+        });
+        cuerpo += '</tbody>';
+
+        const htmlTabla = '<thead>' + thead.html() + '</thead>' + cuerpo;
+
+        const win = window.open('', '_blank');
+        win.document.write('<html><head><title>Informe de Asistencia (Hoy)</title>');
+        win.document.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">');
+        win.document.write('<style> body{padding:20px;} table{width:100%;} </style>');
+        win.document.write('</head><body>');
+        win.document.write('<h1>Informe de Asistencia — ' + tituloDia + '</h1>');
+        win.document.write('<table class="table table-bordered table-striped">' + htmlTabla + '</table>');
+        win.document.write('</body></html>');
+        win.document.close();
+        win.onload = function(){ win.print(); };
+    }
+
+    // Tu impresión por selección (se mantiene igual)
     function imprimirSeleccion() {
         const tabla = document.getElementById('tabla_asistencia');
         let contenidoParaImprimir = '';
         
-        // Encabezado de la tabla
         const encabezado = tabla.querySelector('thead').innerHTML;
         contenidoParaImprimir += '<thead>' + encabezado.replace(/<th><input.*<\/th>/, '') + '</thead>';
 
-        // Filas seleccionadas
         const filas = tabla.querySelectorAll('tbody tr');
         let hayFilasSeleccionadas = false;
         let cuerpoTabla = '<tbody>';
@@ -225,9 +350,8 @@ $query_asistencia = $stmt->get_result();
         filas.forEach(fila => {
             const checkbox = fila.querySelector('.selectRow');
             if (checkbox && checkbox.checked) {
-                // Clonar la fila y eliminar la celda del checkbox
                 const filaClonada = fila.cloneNode(true);
-                filaClonada.deleteCell(0); 
+                filaClonada.deleteCell(0);
                 cuerpoTabla += filaClonada.outerHTML;
                 hayFilasSeleccionadas = true;
             }
@@ -240,7 +364,6 @@ $query_asistencia = $stmt->get_result();
         }
         contenidoParaImprimir += cuerpoTabla;
 
-        // Crear una nueva ventana para la impresión
         const ventanaImpresion = window.open('', '_blank');
         ventanaImpresion.document.write('<html><head><title>Informe de Asistencia</title>');
         ventanaImpresion.document.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">');
