@@ -3,242 +3,206 @@ session_start();
 include_once "includes/header.php";
 include "../conexion.php";
 
-// Obtener el id del usuario desde la sesión
+// Obtener la empresa del usuario logueado
 $idempresa = $_SESSION['idempresa'];
-/*
-// Consultar el rol del usuario
-$queryRol = mysqli_query($conexion, "SELECT rol FROM usuarios WHERE id = '$idUser'");
-$usuario = mysqli_fetch_assoc($queryRol);
-$rolUsuario = $usuario['rol'];
-
-// Contadores generales
-$query1 = mysqli_query($conexion, "SELECT COUNT(id) AS total FROM salas WHERE estado = 1");
-$totalSalas = mysqli_fetch_assoc($query1);
-
-$query2 = mysqli_query($conexion, "SELECT COUNT(id) AS total FROM platos WHERE estado = 1");
-$totalPlatos = mysqli_fetch_assoc($query2);
-
-$query3 = mysqli_query($conexion, "SELECT COUNT(id) AS total FROM usuarios WHERE estado = 1");
-$totalUsuarios = mysqli_fetch_assoc($query3);
-
-$query4 = mysqli_query($conexion, "SELECT COUNT(id) AS total FROM pedidos WHERE estado = 1");
-$totalPedidos = mysqli_fetch_assoc($query4);
-
-$querymesas = mysqli_query($conexion, "SELECT COUNT(id) AS mesas_abiertas FROM pedidos WHERE estado = 'PENDIENTE'");
-$totalMesas = mysqli_fetch_assoc($querymesas);
-
-$sqlh="SELECT count(id) as Total FROM pedidos WHERE estado='FINALIZADO' AND year(fecha)=".date('Y')." AND month(fecha)=".date('m')." AND day(fecha)=".date('d');
-$queryventashoy= mysqli_query($conexion,$sqlh);
-$totalhoy= mysqli_fetch_assoc($queryventashoy);
-
-// Obtener ventas del día actual
 $fechaActual = date('Y-m-d');
-$queryVentasDelDia = mysqli_query($conexion, "
-    SELECT SUM(total) AS total
-    FROM pedidos
-    WHERE DATE(fecha) = '$fechaActual' AND estado = 'FINALIZADO'
-");
-$ventasDelDia = mysqli_fetch_assoc($queryVentasDelDia);
-$totalVentasDelDia = $ventasDelDia['total'] ? $ventasDelDia['total'] : 0;
 
-$query5 = mysqli_query($conexion, "SELECT SUM(total) AS total FROM pedidos");
-$totalVentas = mysqli_fetch_assoc($query5);
+// ======== CONSULTA DE AUSENTES ========
+$queryAusentes = "
+  SELECT COUNT(*) AS ausentes
+  FROM usuarios u
+  LEFT JOIN marcas m 
+    ON u.id_usuarios = m.id_usuario 
+    AND DATE(m.fecha) = '$fechaActual'
+  WHERE 
+    u.id_empresa = '$idempresa'
+    AND u.status = 1
+    AND m.id_marcas IS NULL;
+";
+$resultAusentes = mysqli_query($conexion, $queryAusentes);
+$ausentes = mysqli_fetch_assoc($resultAusentes)['ausentes'];
 
-// Ventas por día del mes actual
-$mesActual = date('m');
-$anioActual = date('Y');
+// ======== CONSULTA DE TOTAL DE EMPLEADOS ========
+$queryTotal = "SELECT COUNT(*) AS total FROM usuarios WHERE id_empresa = '$idempresa' AND status = 1;";
+$resultTotal = mysqli_query($conexion, $queryTotal);
+$total = mysqli_fetch_assoc($resultTotal)['total'];
 
-$queryVentasPorDia = mysqli_query($conexion, "
-    SELECT DAY(fecha) AS dia, SUM(total) AS total
-    FROM pedidos
-    WHERE MONTH(fecha) = '$mesActual' AND YEAR(fecha) = '$anioActual' AND estado = 'FINALIZADO'
-    GROUP BY dia
-");
-
-$ventasPorDiaActual = array_fill(1, 31, 0);
-while ($row = mysqli_fetch_assoc($queryVentasPorDia)) {
-    $ventasPorDiaActual[(int)$row['dia']] = (float)$row['total'];
-}
-$ventasPorDiaJson = json_encode(array_values($ventasPorDiaActual));
-$ventasPorDiaLabels = json_encode(array_keys($ventasPorDiaActual));
+// ======== CÁLCULO DE ASISTENTES ========
+$asistentes = $total - $ausentes;
 ?>
 
-<div class="card">
-    <div class="card-header text-center">
-        Principal
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3><?php echo $totalMesas['mesas_abiertas']; ?></h3>
-                        <p>Mesas Abiertas</p>
-                    </div>
-                    <div class="icon">
-                        <i class="ion ion-bag"></i>
-                    </div>
-                    <a href="index.php" class="small-box-footer">M&aacute;s info <i class="fas fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3><?php echo $totalSalas['total']; ?></h3>
-                        <p>Salones</p>
-                    </div>
-                    <div class="icon">
-                        <i class="nav-icon fas fa-door-open"></i>
-                    </div>
-                    <a href="salas.php" class="small-box-footer">M&aacute;s info <i class="fas fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-            <!-- Sección de Usuarios: Mostrar solo si el rol es 1 -->
-            <?php if ($rolUsuario == 1): ?>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3><?php echo $totalPlatos['total']; ?></h3>
-                        <p>Platos Activos</p>
-                    </div>
-                    <div class="icon">
-                        <i class="nav-icon fas fa-coffee"></i>
-                    </div>
-                    <a href="usuarios.php" class="small-box-footer">M&aacute;s info <i class="fas fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-            <?php endif; ?>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3><?php echo $totalhoy['Total']; ?></h3>
-                        <p>Ventas Hoy</p>
-                    </div>
-                    <div class="icon">
-                        <i class="ion ion-pie-graph"></i>
-                    </div>
-                    <a href="lista_ventas.php" class="small-box-footer">M&aacute;s info <i class="fas fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-        </div>
-        <!-- Sección para ventas diarias -->
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header border-0">
-                        <div class="d-flex justify-content-between">
-                            <h3 class="card-title">Ventas Diarias del Mes (<?php echo date('d/m/Y'); ?>)</h3>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex">
-                            <p class="d-flex flex-column">
-                                <span>Total Ventas -  Día Actual:</span>
-                                <span class="text-bold text-lg">$<?php echo number_format($totalVentasDelDia, 0, '.', ','); ?></span>
-                            </p>
-                        </div>
-                        <div class="position-relative mb-4">
-                            <canvas id="daily-sales-chart" height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="card mt-4">
+  <div class="card-body">
 
-        <!-- Sección para ventas mensuales -->
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header border-0">
-                        <div class="d-flex justify-content-between">
-                            <h3 class="card-title">Ventas Mensuales</h3>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex">
-                            <p class="d-flex flex-column">
-                                <span>Total Anual</span>
-                                <span class="text-bold text-lg">$<?php echo number_format($totalVentas['total'], 0, '.', ','); ?></span>
-                            </p>
-                        </div>
-                        <div class="position-relative mb-4">
-                            <canvas id="sales-chart" height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    <!-- BOTÓN GENERAR TABLA -->
+    <div class="d-flex justify-content-end mb-3">
+      <button id="btnInasistencia" class="btn btn-primary shadow-sm px-3 py-2 rounded-pill d-flex align-items-center gap-2">
+        <i class="fas fa-user-times"></i>
+        <span>Generar Tabla de Inasistencia</span>
+      </button>
     </div>
-</div>*/
-include_once "includes/footer.php";
-/*
-<script src="../assets/js/dashboard.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- TABLA DE INASISTENCIA -->
+    <div id="tablaInasistencia" style="display:none;">
+      <h5 class="text-center mb-3">Personal ausente del día <?php echo $fechaActual; ?></h5>
+
+      <?php
+      $query = "
+        SELECT 
+          u.id_usuarios,
+          u.rut,
+          u.nombres,
+          u.apellido1,
+          u.apellido2,
+          d.descripcion AS departamento
+        FROM usuarios u
+        LEFT JOIN departamentos d ON u.id_departamento = d.id_departamento
+        LEFT JOIN marcas m 
+          ON u.id_usuarios = m.id_usuario 
+          AND DATE(m.fecha) = '$fechaActual'
+        WHERE 
+          u.id_empresa = '$idempresa'
+          AND u.status = 1
+          AND m.id_marcas IS NULL
+        ORDER BY u.apellido1, u.apellido2;
+      ";
+
+      $result = mysqli_query($conexion, $query);
+      ?>
+
+      <?php if (mysqli_num_rows($result) > 0): ?>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>RUT</th>
+                <th>Nombre Completo</th>
+                <th>Departamento</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr>
+                  <td><?php echo $row['rut']; ?></td>
+                  <td><?php echo $row['nombres'] . ' ' . $row['apellido1'] . ' ' . $row['apellido2']; ?></td>
+                  <td><?php echo $row['departamento'] ?: 'Sin asignar'; ?></td>
+                </tr>
+              <?php endwhile; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php else: ?>
+        <div class="alert alert-success text-center">
+          Todos los empleados han registrado marcas hoy.
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- ======== GRÁFICO DE ASISTENCIA ======== -->
+    <div class="mt-5">
+      <h5 class="text-center mb-2">Resumen de asistencia del día <?php echo $fechaActual; ?></h5>
+      <p class="text-center mb-4">
+        <strong>Asistentes:</strong> <?php echo $asistentes; ?> |
+        <strong>Ausentes:</strong> <?php echo $ausentes; ?>
+      </p>
+      <canvas id="graficoAsistencia" height="100"></canvas>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======== SCRIPT PARA TABLA ======== -->
 <script>
-// Datos para el gráfico de ventas diarias
-let salesData = <?php echo $ventasPorDiaJson; ?>;
-let labels = <?php echo $ventasPorDiaLabels; ?>;
-
-// Inicializar el gráfico de ventas diarias
-const ctxDaily = document.getElementById('daily-sales-chart').getContext('2d');
-const dailySalesChart = new Chart(ctxDaily, {
-    type: 'bar',
-    data: {
-        labels: labels,
-        datasets: [{
-            label: 'Ventas Diarias',
-            data: salesData,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            fill: true,
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Total Ventas ($)'
-                },
-                ticks: {
-                    stepSize: 200000,
-                    callback: function(value) {
-                        return '$' + value.toLocaleString();
-                    }
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Días del Mes'
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                display: true,
-                position: 'top'
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(tooltipItem) {
-                        return 'Ventas: $' + tooltipItem.raw.toLocaleString();
-                    }
-                }
-            }
-        }
-    }
+document.getElementById('btnInasistencia').addEventListener('click', function() {
+  const tabla = document.getElementById('tablaInasistencia');
+  if (tabla.style.display === 'none') {
+    tabla.style.display = 'block';
+    this.innerHTML = '<i class="fas fa-eye-slash"></i><span> Ocultar Tabla de Inasistencia</span>';
+  } else {
+    tabla.style.display = 'none';
+    this.innerHTML = '<i class="fas fa-user-times"></i><span> Generar Tabla de Inasistencia</span>';
+  }
 });
 </script>
 
-<style>
-    #daily-sales-chart {
-        height: 200px; 
+<!-- ======== SCRIPT DEL GRÁFICO (Chart.js) ======== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('graficoAsistencia').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Asistentes', 'Ausentes'],
+    datasets: [{
+      label: 'Cantidad de empleados',
+      data: [<?php echo $asistentes; ?>, <?php echo $ausentes; ?>],
+      backgroundColor: ['#28a745', '#dc3545'],
+      borderColor: ['#1e7e34', '#a71d2a'],
+      borderWidth: 1,
+      barThickness: 50, // Barras más delgadas
+      maxBarThickness: 60
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1 }
+      },
+      x: {
+        grid: { display: false }
+      }
     }
+  }
+});
+</script>
+
+<!-- ======== ESTILOS ======== -->
+<style>
+  .card {
+    margin: 30px auto;
+    max-width: 1000px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  #btnInasistencia {
+    font-size: 0.95rem;
+    font-weight: 500;
+    background-color: #007bff;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  #btnInasistencia:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+  }
+
+  .table {
+    background-color: #fff;
+  }
+
+  .table th {
+    background-color: #343a40;
+    color: #fff;
+  }
+
+  .alert {
+    font-size: 1rem;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  p strong {
+    color: #343a40;
+  }
 </style>
-*/
+
+<?php include_once "includes/footer.php"; ?>
