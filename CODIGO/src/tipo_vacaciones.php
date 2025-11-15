@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombre'], $_POST['esta
 
 ?>
 
-<div class="container mt-4">
+<div class="card ">
     <h2>Tipo de Vacaciones</h2>
     <form id="formulario" method="post">
         <div class="form-group">

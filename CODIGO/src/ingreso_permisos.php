@@ -52,7 +52,7 @@ if (
 </head>
 
 <div class="container py-4">
-    <div class="card shadow-sm">
+    <div class="card ">
         <div class="card-header bg-light">
             <h2 class="mb-0 h4"><i class="fas fa-file-alt mr-2"></i>Ingreso de Permisos de Personal</h2>
         </div>

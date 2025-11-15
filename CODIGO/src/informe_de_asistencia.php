@@ -205,9 +205,9 @@ $AUTO_PRINT_TODAY = false;
 ?>
 
 <!-- Filtros -->
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-light">
-        <h4 class="mb-0"><i class="fas fa-filter mr-2 text-primary"></i>Informe de Marcas</h4>
+<div class="card ">
+    <div class="card-header ">
+        <h2 class="mb-0"><i class="fas fa-filter mr-2 text-primary"></i>Informe de Marcas</h2>
     </div>
     <div class="card-body">
         <form action="" method="get" id="formFiltros">
