@@ -157,12 +157,6 @@ $id_empresa=$_SESSION['idempresa'];
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="nombreturno.php" class="nav-link">
-                                        <i class="nav-icon fas fa-receipt"></i>
-                                        <p>Nombre Turnos</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
                                     <a href="permisos.php" class="nav-link">
                                         <i class="nav-icon fas fa-receipt"></i>
                                         <p>Permisos</p>
@@ -242,13 +236,6 @@ $id_empresa=$_SESSION['idempresa'];
                                     </a>
                                 </li>
                             </ul>
-                            <ul class="nav nav-treeview">
-								<li class="nav-item">
-									<a href="ventas_producto.php" class="nav-link">
-										<i class="nav-icon fas fa-chart-line"></i><p>Listado de Ventas por Producto</p>
-									</a>
-								</li>                               
-							</ul>
 							<ul class="nav nav-treeview">
 								<li class="nav-item">
 									<a href="permisos_aprobados.php" class="nav-link">
